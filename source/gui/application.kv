@@ -1,0 +1,57 @@
+<MainFrame>:
+    cols: 1
+    rows: 2
+
+    BoxLayout:
+        id: main_menu
+        orientation: 'horizontal'
+        size_hint_x: 1
+        size_hint_y: None
+        height: 50
+
+        Button:
+            id: load_data_button
+            text: 'Load Data'
+            width: 200
+            size_hint_x: None
+            on_press: root.call_method_on_child('draw_complex_plot')
+
+        Button:
+            id: load_data_button2
+            text: 'Load Data2'
+            width: 200
+            size_hint_x: None
+            on_press: root.call_method_on_child('draw_histogram')
+
+    BoxLayout:
+        id: content_area
+        orientation: 'horizontal'
+
+        GridLayout:
+            id: nav_panel
+            cols: 1
+            rows: 3
+            size_hint_x: None
+            width: 150
+
+
+            Button:
+                id: sales_nav_button
+                text: 'Sales'
+                size_hint_x: 1
+                size_hint_y: None
+                height: 50
+                on_press: root.open_sales()
+
+            Button:
+                id: purchasing_nav_button
+                text: 'Purchasing'
+                size_hint_x: 1
+                size_hint_y: None
+                height: 50
+                on_press: root.open_purchasing()
+
+        BoxLayout:
+            id: module_container
+            orientation: 'horizontal'
+            size_hint_x: 1
