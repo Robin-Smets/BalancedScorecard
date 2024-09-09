@@ -1,57 +1,80 @@
 <MainFrame>:
-    cols: 1
-    rows: 2
+    cols: 2
+    rows: 1
 
-    BoxLayout:
-        id: main_menu
-        orientation: 'horizontal'
-        size_hint_x: 1
-        size_hint_y: None
-        height: 50
+    MDBoxLayout:
+        id: nav_panel
+        orientation: 'vertical'
+        size_hint_x: None
+        width: 150
 
-        Button:
-            id: load_data_button
-            text: 'Load Data'
-            width: 200
-            size_hint_x: None
-            on_press: root.call_method_on_child('draw_complex_plot')
+        MDRaisedButton:
+            id: sales_nav_button
+            text: 'Sales'
+            size_hint_x: 1
+            size_hint_y: None
+            height: 50
+            on_press: root.open_sales()
 
-        Button:
-            id: load_data_button2
-            text: 'Load Data2'
-            width: 200
-            size_hint_x: None
-            on_press: root.call_method_on_child('draw_histogram')
+        MDRaisedButton:
+            id: purchasing_nav_button
+            text: 'Purchasing'
+            size_hint_x: 1
+            size_hint_y: None
+            height: 50
+            on_press: root.open_purchasing()
 
-    BoxLayout:
+        Widget:
+            id: empty_widget
+
+    MDBoxLayout:
         id: content_area
-        orientation: 'horizontal'
+        orientation: 'vertical'
 
-        GridLayout:
-            id: nav_panel
-            cols: 1
-            rows: 3
-            size_hint_x: None
-            width: 150
+        MDBoxLayout:
+            id: main_menu
+            orientation: 'horizontal'
+            size_hint_x: 1
+            size_hint_y: None
+            height: 50
 
+            MDRaisedButton:
+                id: time_unit_button
+                text: 'Zeiteinheit'
+                pos_hint: {"center_x": .5, "center_y": .5}
+                on_release: app.menu.open()
+                size_hint_x: None
+                width: 150
 
-            Button:
-                id: sales_nav_button
-                text: 'Sales'
-                size_hint_x: 1
-                size_hint_y: None
-                height: 50
-                on_press: root.open_sales()
+            MDRaisedButton:
+                id: start_date_button
+                text: 'Startdatum'
+                width: 150
+                size_hint_x: None
+                on_press: root.open_date_picker('start')
 
-            Button:
-                id: purchasing_nav_button
-                text: 'Purchasing'
-                size_hint_x: 1
-                size_hint_y: None
-                height: 50
-                on_press: root.open_purchasing()
+            MDRaisedButton:
+                id: end_date_button
+                text: 'Enddatum'
+                width: 150
+                size_hint_x: None
+                on_press: root.open_date_picker('end')
 
-        BoxLayout:
+            MDRaisedButton:
+                id: load_data_button
+                text: 'Load Data'
+                width: 200
+                size_hint_x: None
+                on_press: root.call_method_on_child('draw_complex_plot')
+
+            MDRaisedButton:
+                id: options_button
+                text: 'Options'
+                width: 200
+                size_hint_x: None
+                on_press: root.open_options_dialog()
+
+        MDBoxLayout:
             id: module_container
             orientation: 'horizontal'
             size_hint_x: 1

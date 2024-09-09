@@ -1,23 +1,15 @@
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.widget import Widget
-import matplotlib.pyplot as plt
 import seaborn as sns
-import pandas as pd
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import os
 from kivy.lang import Builder
-import numpy as np
-from kivy.uix.image import Image
-from kivy.graphics.texture import Texture
-import io
-from kivy_garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
-from kivy.clock import Clock
-from source.gui.plot import PlotCanvas
 from source.data import DatabaseService
 current_dir = os.path.dirname(__file__)
 kv_file_path = os.path.join(current_dir, 'sales.kv')
 Builder.load_file(kv_file_path)
 from matplotlib.gridspec import GridSpec
+from source.gui.plot import PlotCanvas
+from kivy.uix.modalview import ModalView
+from kivymd.uix.spinner import MDSpinner
 
 class Sales(BoxLayout):
     def __init__(self, **kwargs):
@@ -25,6 +17,7 @@ class Sales(BoxLayout):
 
     def draw_complex_plot(self):
         plot_canvas = self.ids.sales_plot_canvas
+        self.show_spinner()
         df = sns.load_dataset('iris')
         databases = DatabaseService().databases
         databases['DataWarehouse'].load_tables(['RevenuePerMonth'])
@@ -61,6 +54,8 @@ class Sales(BoxLayout):
         plot_canvas.args = {'plot_func': complex_plot}
         plot_canvas.update_plot()
 
+        self.hide_spinner()
+
     def draw_scatterplot(self):
         # Example for scatter plot
         plot_canvas = self.ids.sales_plot_canvas
@@ -90,3 +85,13 @@ class Sales(BoxLayout):
         plot_canvas.dataframe = df
         plot_canvas.args = {'plot_func': histogram_plot}
         plot_canvas.update_plot()
+
+
+    def show_spinner(self):
+        self.ids.sales_plot_canvas.clear_widgets()
+        self.ids.sales_plot_canvas.spinner = ModalView(size_hint=(0.2, 0.2))
+        self.ids.sales_plot_canvas.spinner.add_widget(MDSpinner())
+        self.ids.sales_plot_canvas.spinner.open()
+
+    def hide_spinner(self):
+        self.ids.sales_plot_canvas.spinner.dismiss()
