@@ -1,22 +1,71 @@
+# application.py
+
+import threading
+import webview
 from kivymd.app import MDApp
 from kivy.uix.gridlayout import GridLayout
 from kivymd.uix.pickers import MDDatePicker
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDRaisedButton
+from kivymd.uix.button import MDRaisedButton, MDIconButton
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.menu import MDDropdownMenu
-from source.gui.purchasing import Purchasing
-from source.gui.sales import Sales
+from threading import Thread
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtCore import QUrl
+
+class AppService:
+    @property
+    def app(self):
+        return self._app
+
+    @app.setter
+    def app(self, value):
+        self._app = value
+
+    @property
+    def dashboard(self):
+        return self._dashboard
+
+    @dashboard.setter
+    def dashboard(self, value):
+        self._dashboard = value
+
+    @property
+    def dashboard_server(self):
+        return self._dashboard_server
+
+    @dashboard_server.setter
+    def dashboard_server(self, value):
+        self._dashboard_server = value
+
+    def __init__(self):
+        self._app = None
+        self._dashboard = None
+        self._dashboard_server = None
+
 
 class Application(MDApp):
 
+    @property
+    def dashboard_server(self):
+        return self._dashboard_server
+
+    @dashboard_server.setter
+    def dashboard_server(self, value):
+        self._dashboard_server = value
+
     def __init__(self, **kwargs):
         super(Application, self).__init__(**kwargs)
+        self._dashboard = None
+        self._dashboard_server = None
         self._main_frame = None
 
 
     def build(self):
         self._main_frame = MainFrame()
+        self.theme_cls.primary_palette = "Blue"
+        self.theme_cls.theme_style = "Light"
         menu_items = [
             {
                 "text": f"Item {i}",
@@ -34,29 +83,26 @@ class Application(MDApp):
     def menu_callback(self, text_item):
         print(text_item)
 
+    def open_dashboard(self):
+        open_dashboard_thread = Thread(target=self.open_dashboard_thread)
+        open_dashboard_thread.daemon = True
+        open_dashboard_thread.start()
+
+    def open_dashboard_thread(self):
+        app = QApplication([])
+        window = QMainWindow()
+        view = QWebEngineView()
+        url = QUrl('http://127.0.0.1:8050')
+        view.setUrl(url)
+        window.setCentralWidget(view)
+        window.show()
+        app.exec_()
+
+    def run_dashboard(self):
+        self.dashboard_server.run(host="127.0.0.1", port=8050, debug=False)
+
+
 class MainFrame(GridLayout):
-
-    def open_sales(self):
-        self.ids.module_container.clear_widgets()
-        self.ids.module_container.add_widget(Sales())
-
-    def open_purchasing(self):
-        self.ids.module_container.clear_widgets()
-        self.ids.module_container.add_widget(Purchasing())
-
-    def call_method_on_child(self, method_name):
-        """Call a method of the current child in module_container with the given method name."""
-        if self.ids.module_container.children:
-            current_widget = self.ids.module_container.children[0]
-            if hasattr(current_widget, method_name):
-                method = getattr(current_widget, method_name)
-                if callable(method):
-                    method()
-                else:
-                    print(f'{method_name} is not callable in {current_widget}')
-            else:
-                print(f'{current_widget} has no method {method_name}')
-
     def open_date_picker(self, date_type):
         date_dialog = MDDatePicker()
         date_dialog.bind(on_save=lambda instance, value, date_range: self.set_date(date_type, value))
@@ -84,3 +130,11 @@ class MainFrame(GridLayout):
             ],
         )
         self.dialog.open()
+
+    def open_login_dialog(self):
+        pass
+
+    def exit(self):
+        pass
+
+

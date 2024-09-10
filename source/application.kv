@@ -1,0 +1,158 @@
+<MainFrame>:
+    rows: 2
+    cols: 1
+
+    MDBoxLayout:
+        id: header_box
+        orientation: 'horizontal'
+        size_hint_x: 1
+        size_hint_y: None
+        height: 50
+        md_bg_color: app.theme_cls.primary_color
+
+        MDIconButton:
+            id: sales_nav_button
+            icon: 'account'
+            size_hint_x: None
+            size_hint_y: None
+            height: 50
+            width: 50
+            on_press: root.open_login_dialog()
+
+        MDLabel:
+            id: purchasing_nav_button
+            text: 'Balanced Scorecard: Random Tech Ltd.'
+            size_hint_x: 1
+            size_hint_y: None
+            height: 50
+            halign: "center"
+
+        MDIconButton:
+            id: exit_button
+            icon: 'dots-vertical'
+            size_hint_x: None
+            size_hint_y: None
+            height: 50
+            width: 50
+            on_press: root.exit()
+
+
+    MDBoxLayout:
+        id: content_box
+        orientation: 'horizontal'
+
+
+        MDBoxLayout:
+            size_hint_x: 0.1
+            size_hint_y: 0.9
+            pos_hint: {'center_y': 0.5}
+            padding: dp(20)
+
+            MDCard:
+                id: control_card
+                style: 'elevated'
+
+                MDBoxLayout:
+                    orientation: "vertical"
+
+                    MDGridLayout:
+                        cols: 2  # Zwei Spalten (Labels + Buttons)
+                        row_default_height: dp(50)  # Feste Höhe für jede Zeile
+                        padding: dp(20)  # Abstand um das Layout herum
+                        spacing: dp(10)  # Abstand zwischen den Elementen
+
+                        # Erste Zeile: Label und Button
+                        MDLabel:
+                            text: "Start Date"
+                            size_hint_x: None
+                            width: dp(200)  # Feste Breite der ersten Spalte
+                            halign: "left"
+                            valign: "middle"
+                            text_size: self.size
+
+                        MDRaisedButton:
+                            id: start_date_button
+                            text: "Start Date"
+                            size_hint_x: 1  # Flexibler Platz
+                            on_press: root.open_date_picker('start')
+
+                        # Zweite Zeile: Label und Button
+                        MDLabel:
+                            text: "End Date"
+                            size_hint_x: None
+                            width: dp(200)
+                            halign: "left"
+                            valign: "middle"
+                            text_size: self.size
+
+                        MDRaisedButton:
+                            id: end_date_button
+                            text: "Button 2"
+                            size_hint_x: 1  # Flexibler Platz
+                            on_press: root.open_date_picker('end')
+
+                        # Dritte Zeile: Label und Button
+                        MDLabel:
+                            text: "Time Unit"
+                            size_hint_x: None
+                            width: dp(200)
+                            halign: "left"
+                            valign: "middle"
+                            text_size: self.size
+
+                        MDRaisedButton:
+                            id: time_unit_button
+                            text: "Month"
+                            size_hint_x: 1  # Flexibler Platz
+                            on_press: app.menu.open()
+
+                    # Mittlerer flexibler Platz
+                    BoxLayout:
+                        size_hint_y: None
+                        height: dp(0)  # Keine feste Höhe, um das mittlere Element responsiv zu gestalten
+                        canvas.before:
+                            Color:
+                                rgba: 0, 0, 0, 0
+                            Rectangle:
+                                size: self.size
+                                pos: self.pos
+
+                    # Unterer Bereich für zwei Buttons
+                    MDBoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: dp(80)  # Höhe für den unteren Bereich
+                        padding: dp(10)
+
+                        MDRaisedButton:
+                            text: "Update Data Store"
+                            icon: "content-save"
+                            md_bg_color: app.theme_cls.primary_color
+                            size_hint_x: 0.5  # Halbe Breite für den ersten Button
+
+                        MDRaisedButton:
+                            text: "Open Dashboard"
+                            icon: "cancel"
+                            md_bg_color: app.theme_cls.primary_color
+                            size_hint_x: 0.5  # Halbe Breite für den zweiten Button
+                            on_press: app.open_dashboard()
+
+
+        MDBoxLayout:
+            size_hint_x: 0.1
+            size_hint_y: 0.9
+            pos_hint: {'center_y': 0.5}
+            padding: dp(20)
+
+            MDCard:
+                id: console_card
+                style: 'elevated'
+
+                ScrollView:
+                    id: console_scroll_view
+
+                    MDTextField:
+                        id: console_text_field
+                        size_hint_x: 1
+                        size_hint_y: 1
+

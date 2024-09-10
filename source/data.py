@@ -1,30 +1,13 @@
 from sqlalchemy import create_engine
 import pandas as pd
 import os
-
-def get_csv_directory():
-    app_path = os.getcwd()
-    parent_dir = os.path.dirname(app_path)
-    return f'{parent_dir}/data'
+from pathlib import Path
 
 
-def aggregate_by_time_unit(df, time_unit):
-    # Erstelle eine neue Spalte für die Zeit-Einheit
-    if time_unit == 'year':
-        aggregated_df = df.groupby('OrderDateYear').agg({'TotalDue': 'sum'}).reset_index()
-    elif time_unit == 'month':
-        month_df = df[['OrderDateYear','OrderDateMonth', 'TimeUnitMonth', 'TotalDue']]
-        aggregated_df = month_df.groupby(['OrderDateYear', 'OrderDateMonth', 'TimeUnitMonth'])[
-            'TotalDue'].sum().reset_index()
-        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitMonth': 'TimeUnit'}, inplace=True)
-    elif time_unit == 'quarter':
-        aggregated_df = df.groupby('OrderDateQuarter').agg({'TotalDue': 'sum'}).reset_index()
-    elif time_unit == 'cw':
-        aggregated_df = df.groupby('OrderDateCalenderWeek').agg({'TotalDue': 'sum'}).reset_index()
-    else:
-        raise ValueError("Invalid time_unit. Choose from 'year', 'month', 'quarter', 'cw'.")
 
-    return aggregated_df
+
+
+from source.services import ServiceProvider
 
 
 class Database:
@@ -64,40 +47,26 @@ class Database:
 
         self._tables = {}
 
-    def load_tables(self, tables):
-        # Update the _tables attribute
-        for table in tables:
-            query = f'SELECT * FROM dbo.{table}'
-            self._tables[table] = pd.read_sql_query(query, self._engine)
+    #  TODO: make more generic
+    # def load_tables(self, tables):
+    #     # Update the _tables attribute
+    #     for table in tables:
+    #         query = f'SELECT * FROM dbo.{table}'
+    #         self._tables[table] = pd.read_sql_query(query, self._engine)
 
-    def import_tables_from_csv_files(self, csv_directory=''):
-        if csv_directory != '':
-            if not os.path.isdir(csv_directory):
-                raise ValueError(f"Das Verzeichnis '{csv_directory}' existiert nicht.")
-        else:
-            csv_directory = get_csv_directory()
+    def import_tables_from_files(self, file_extension, directory=''):
+        if directory == '':
+            directory = ServiceProvider().get_service('DataStore').file_directory
+        for filename in os.listdir(directory):
+            if filename.endswith(f'.{file_extension}'):
+                file_path = os.path.join(directory, filename)
+                if file_extension == 'csv':
+                    df = pd.read_csv(file_path, sep=';', engine='python')
+                    table_name = Path(file_path).stem
+                    self.tables[table_name] = df
 
-        # Iterieren über alle Dateien im angegebenen Verzeichnis
-        for filename in os.listdir(csv_directory):
-            # Überprüfen, ob die Datei eine CSV-Datei ist
-            if filename.endswith('.csv'):
-                # Erstellen des vollständigen Pfads zur Datei
-                file_path = os.path.join(csv_directory, filename)
 
-                # Einlesen der CSV-Datei in einen DataFrame
-                df = pd.read_csv(file_path, sep=';', engine='python')
-
-                # Entfernen der '.csv'-Erweiterung vom Dateinamen und als Schlüssel verwenden
-                table_name = filename[:-4]  # Entfernen der letzten 4 Zeichen ('.csv')
-
-                # Hinzufügen des DataFrames zum Dictionary
-                self.tables[table_name] = df
-
-        return self.tables
-
-class DatabaseService:
-    _instance = None
-
+class DataStore:
     @property
     def databases(self):
         return self._databases
@@ -107,21 +76,39 @@ class DatabaseService:
         self._databases = value
 
     @property
-    def data_directory(self):
-        return self._data_directory
+    def file_directory(self):
+        return self._file_directory
 
-    @data_directory.setter
-    def data_directory(self, value):
-        self._data_directory = value
+    @file_directory.setter
+    def file_directory(self, value):
+        self._file_directory = value
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(DatabaseService, cls).__new__(cls, *args, **kwargs)
-        return cls._instance
+    def __init__(self, file_directory=''):
+        if file_directory == '':
+            self._file_directory = get_default_data_store_directory()
+        else:
+            self._file_directory = file_directory
+        self._databases = {}
 
-    def __init__(self):
-        # Initialisierung wird nur einmal durchgeführt
-        if not hasattr(self, '_initialized'):
-            self._initialized = True
-            self._data_directory = get_csv_directory()
-            self._databases = {}
+def get_default_data_store_directory():
+    app_path = os.getcwd()
+    parent_dir = os.path.dirname(app_path)
+    return f'{parent_dir}/data'
+
+def aggregate_by_time_unit(df, time_unit):
+    # Erstelle eine neue Spalte für die Zeit-Einheit
+    if time_unit == 'year':
+        aggregated_df = df.groupby('OrderDateYear').agg({'TotalDue': 'sum'}).reset_index()
+    elif time_unit == 'month':
+        month_df = df[['OrderDateYear','OrderDateMonth', 'TimeUnitMonth', 'TotalDue']]
+        aggregated_df = month_df.groupby(['OrderDateYear', 'OrderDateMonth', 'TimeUnitMonth'])[
+            'TotalDue'].sum().reset_index()
+        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitMonth': 'TimeUnit'}, inplace=True)
+    elif time_unit == 'quarter':
+        aggregated_df = df.groupby('OrderDateQuarter').agg({'TotalDue': 'sum'}).reset_index()
+    elif time_unit == 'cw':
+        aggregated_df = df.groupby('OrderDateCalenderWeek').agg({'TotalDue': 'sum'}).reset_index()
+    else:
+        raise ValueError("Invalid time_unit. Choose from 'year', 'month', 'quarter', 'cw'.")
+
+    return aggregated_df

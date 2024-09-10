@@ -1,0 +1,9 @@
+pandas~=2.2.2
+SQLAlchemy~=2.0.34
+Kivy~=2.3.0
+dash~=2.18.0
+dash-bootstrap-components~=1.6.0
+requests~=2.32.3
+Flask~=3.0.3
+pywebview~=5.2
+kivymd~=1.2.0
