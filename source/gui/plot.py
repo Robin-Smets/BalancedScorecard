@@ -73,7 +73,3 @@ class PlotCanvas(BoxLayout):
 
             # Update the canvas
             self.plot_canvas.draw()
-
-
-        # Aktualisiere die Figur
-        self.plot_canvas.draw()

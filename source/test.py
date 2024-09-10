@@ -1,58 +1,47 @@
-from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.widget import Widget
+import dash
+from dash import dcc, html
+import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output
+import requests
+from flask import Flask, jsonify
 
+# Flask-App erstellen
+server = Flask(__name__)
 
-class MainMenu(Screen):
-    pass
+# Eine einfache API-Route erstellen
+@server.route('/api/data', methods=['GET'])
+def get_data():
+    # Beispiel-Daten, die von der API zurückgegeben werden
+    data = {'message': 'Hello from Flask API', 'value': 42}
+    return jsonify(data)
 
+# Dash-App erstellen, die auf demselben Flask-Server läuft
+app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-class Module1(Screen):
-    pass
+# Layout der Dash-App
+app.layout = dbc.Container(
+    [
+        html.H1("Dash App mit Flask API Integration"),
+        html.Button("Daten von API abrufen", id="get-data-btn", n_clicks=0),
+        html.Div(id="output")
+    ],
+    fluid=True,
+)
 
+# Callback für die Schaltfläche, die Daten von der API abruft
+@app.callback(
+    Output("output", "children"),
+    Input("get-data-btn", "n_clicks"),
+)
+def update_output(n_clicks):
+    if n_clicks > 0:
+        # Anfrage an die Flask-API
+        response = requests.get("http://127.0.0.1:8050/api/data")
+        if response.status_code == 200:
+            data = response.json()
+            return f"Nachricht von API: {data['message']}, Wert: {data['value']}"
+    return "Klicke auf den Button, um Daten von der API abzurufen."
 
-class Module2(Screen):
-    pass
-
-
-class ModuleContainer(BoxLayout):
-    def __init__(self, **kwargs):
-        super(ModuleContainer, self).__init__(**kwargs)
-        self.orientation = 'horizontal'
-        self.add_widget(NavigationPanel())
-        self.add_widget(ScreenManagerWidget())
-
-
-class NavigationPanel(BoxLayout):
-    def __init__(self, **kwargs):
-        super(NavigationPanel, self).__init__(**kwargs)
-        self.orientation = 'vertical'
-        self.add_widget(Button(text="Module 1", on_press=self.change_to_module1))
-        self.add_widget(Button(text="Module 2", on_press=self.change_to_module2))
-
-    def change_to_module1(self, instance):
-        app = App.get_running_app()
-        app.screen_manager.current = 'module1'
-
-    def change_to_module2(self, instance):
-        app = App.get_running_app()
-        app.screen_manager.current = 'module2'
-
-
-class ScreenManagerWidget(ScreenManager):
-    def __init__(self, **kwargs):
-        super(ScreenManagerWidget, self).__init__(**kwargs)
-        self.add_widget(MainMenu(name='main'))
-        self.add_widget(Module1(name='module1'))
-        self.add_widget(Module2(name='module2'))
-
-
-class App(App):
-    def build(self):
-        self.screen_manager = ScreenManagerWidget()
-        return ModuleContainer()
-
-
+# Dash-Anwendung starten
+if __name__ == "__main__":
+    app.run_server(debug=True)
