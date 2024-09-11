@@ -1,3 +1,6 @@
+import queue
+import threading
+
 import dash
 import pandas as pd
 import plotly.express as px
@@ -36,6 +39,7 @@ class DashboardService:
         self._dashboard_server = None
         self._dashboard_data = None
         self._dashboard = None
+        self._order_volume_over_time_data_queue = queue.Queue()
 
     def fix_data(self):
         self.dashboard_data.loc[:, 'TotalDue'] = self.dashboard_data['TotalDue'].str.replace(',', '.')
@@ -50,8 +54,8 @@ class DashboardService:
         dashboard = dash.Dash('dashboard_server', self.dashboard_server, external_stylesheets=[dbc.themes.BOOTSTRAP])
         dashboard.layout = dbc.Container(
             [
-                html.H1("Interaktives Balkendiagramm mit Dash"),
-                html.Label("Zeiteinheit:"),
+                html.H1("Order Volume"),
+                html.Label("Time unit:"),
                 dcc.Dropdown(
                     id="time_unit_selection",
                     options=[
@@ -62,14 +66,14 @@ class DashboardService:
                     ],
                     value="month",  # Standardwert
                 ),
-                html.Label("Zeitraum auswählen:"),
+                html.Label("Time span:"),
                 dcc.DatePickerRange(
                     id='date_picker_range',
                     start_date=min_real_date,
                     end_date=max_real_date,
                     display_format='DD.MM.YYYY'  # Format für die Anzeige
                 ),
-                dcc.Graph(id="balkendiagramm"),
+                dcc.Graph(id="order_volume_over_time_graph"),
                 html.Hr(),  # Linie zur Trennung
                 html.H2("Pie Charts Übersicht"),
                 dbc.Row(
@@ -90,14 +94,28 @@ class DashboardService:
 
         # Callback-Funktion, um das Diagramm dynamisch zu aktualisieren
         @dashboard.callback(
-            Output("balkendiagramm", "figure"),
+            Output("order_volume_over_time_graph", "figure"),
             [
                 Input("time_unit_selection", "value"),
                 Input("date_picker_range", "start_date"),
                 Input("date_picker_range", "end_date"),
             ],
         )
-        def update_balkendiagramm(time_unit, start_date, end_date):
+        def update_order_volume_over_time_graph(time_unit, start_date, end_date):
+            thread = threading.Thread(target=update_order_volume_over_time_graph_date, args=(time_unit, start_date, end_date))
+            thread.start()
+
+            # Create the bar chart with filtered data
+            fig = px.bar(
+                self._order_volume_over_time_data_queue.get(),
+                x='TimeUnit',
+                y='OrderVolume',
+                title=f"Order Volume Over {time_unit}",
+                labels={"Kategorie": "Kategorie", time_unit: "Wert"},
+            )
+            return fig
+
+        def update_order_volume_over_time_graph_date(time_unit, start_date, end_date):
             # Ensure valid date range for filtering
             start_date = pd.to_datetime(start_date, errors='coerce')
             end_date = pd.to_datetime(end_date, errors='coerce')
@@ -110,20 +128,12 @@ class DashboardService:
             filtered_data = self.dashboard_data[
                 (pd.to_datetime(self.dashboard_data['OrderDate'], errors='coerce') >= start_date) &
                 (pd.to_datetime(self.dashboard_data['OrderDate'], errors='coerce') <= end_date)
-            ]
+                ]
 
             # Aggregieren der gefilterten Daten
             aggregated_table = aggregate_by_time_unit(filtered_data, time_unit)
+            self._order_volume_over_time_data_queue.put(aggregated_table)
 
-            # Create the bar chart with filtered data
-            fig = px.bar(
-                aggregated_table,
-                x='TimeUnit',
-                y='OrderVolume',
-                title=f"Balkendiagramm für {time_unit} von {start_date.date()} bis {end_date.date()}",
-                labels={"Kategorie": "Kategorie", time_unit: "Wert"},
-            )
-            return fig
 
         # Dummy Pie Charts Callback
         @dashboard.callback(
