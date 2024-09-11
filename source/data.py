@@ -2,12 +2,7 @@ from sqlalchemy import create_engine
 import pandas as pd
 import os
 from pathlib import Path
-
-
-
-
-
-from source.services import ServiceProvider
+from services import ServiceProvider
 
 
 class Database:
@@ -98,17 +93,53 @@ def get_default_data_store_directory():
 def aggregate_by_time_unit(df, time_unit):
     # Erstelle eine neue Spalte für die Zeit-Einheit
     if time_unit == 'year':
-        aggregated_df = df.groupby('OrderDateYear').agg({'TotalDue': 'sum'}).reset_index()
+        year_df = df[['OrderDateYear', 'TimeUnitYear', 'TotalDue']]
+        aggregated_df = year_df.groupby(['OrderDateYear', 'TimeUnitYear'])[
+            'TotalDue'].sum().reset_index()
+        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitYear': 'TimeUnit'}, inplace=True)
+
     elif time_unit == 'month':
         month_df = df[['OrderDateYear','OrderDateMonth', 'TimeUnitMonth', 'TotalDue']]
         aggregated_df = month_df.groupby(['OrderDateYear', 'OrderDateMonth', 'TimeUnitMonth'])[
             'TotalDue'].sum().reset_index()
         aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitMonth': 'TimeUnit'}, inplace=True)
+
     elif time_unit == 'quarter':
-        aggregated_df = df.groupby('OrderDateQuarter').agg({'TotalDue': 'sum'}).reset_index()
+        quarter_df = df[['OrderDateYear','OrderDateQuarter', 'TimeUnitQuarter', 'TotalDue']]
+        aggregated_df = quarter_df.groupby(['OrderDateYear', 'OrderDateQuarter', 'TimeUnitQuarter'])[
+            'TotalDue'].sum().reset_index()
+        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitQuarter': 'TimeUnit'}, inplace=True)
+
     elif time_unit == 'cw':
-        aggregated_df = df.groupby('OrderDateCalenderWeek').agg({'TotalDue': 'sum'}).reset_index()
+        cw_df = df[['OrderDateYear','OrderDateCalenderWeek', 'TimeUnitCalenderWeek', 'TotalDue']]
+        aggregated_df = cw_df.groupby(['OrderDateYear', 'OrderDateCalenderWeek', 'TimeUnitCalenderWeek'])[
+            'TotalDue'].sum().reset_index()
+        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitCalenderWeek': 'TimeUnit'}, inplace=True)
+
     else:
         raise ValueError("Invalid time_unit. Choose from 'year', 'month', 'quarter', 'cw'.")
+
+    return aggregated_df
+
+
+def aggregate_by_column(df, column_name):
+    """
+    Aggregates data in the DataFrame by the specified column and calculates the sum of 'TotalDue'.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing the data.
+        column_name (str): The name of the column to aggregate by.
+
+    Returns:
+        pd.DataFrame: A DataFrame with the aggregated sums of 'TotalDue' over the specified column.
+    """
+    if column_name not in df.columns:
+        raise ValueError(f"Column '{column_name}' does not exist in the dataframe.")
+
+    # Group by the specified column and calculate the sum of 'TotalDue'
+    aggregated_df = df[[column_name, 'TotalDue']].groupby(column_name)['TotalDue'].sum().reset_index()
+
+    # Rename the 'TotalDue' column to 'OrderVolume'
+    aggregated_df.rename(columns={'TotalDue': 'OrderVolume'}, inplace=True)
 
     return aggregated_df

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seiten-Navigation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        .sidenav {
+            height: 100%;
+            width: 200px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #333;
+            padding-top: 20px;
+        }
+        .sidenav a {
+            padding: 15px;
+            text-decoration: none;
+            font-size: 18px;
+            color: white;
+            display: block;
+        }
+        .sidenav a:hover {
+            background-color: #575757;
+        }
+        .main {
+            margin-left: 200px;
+            padding: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 95vh;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidenav">
+    <a href="home.html" target="content-frame">Home</a>
+    <a href="about.html" target="content-frame">About</a>
+    <a href="impressum.html" target="content-frame">Impressum</a>
+    <a href="http://127.0.0.1:8050/" target="content-frame">Dashboard</a>
+</div>
+
+<div class="main">
+    <iframe name="content-frame" src="home.html"></iframe>
+</div>
+
+</body>
+</html>
