@@ -1,6 +1,6 @@
 import queue
 import threading
-
+import datetime
 import dash
 import pandas as pd
 import plotly.express as px
@@ -13,6 +13,8 @@ from source.services import ServiceProvider
 
 
 class DashboardService:
+    _timestamps = {}
+
     @property
     def dashboard_server(self):
         return self._dashboard_server
@@ -122,6 +124,7 @@ class DashboardService:
             ],
         )
         def update_order_volume_over_time_graph(time_unit, start_date, end_date):
+            self._timestamps['CALL: update_order_volume_over_time_graph'] = datetime.datetime.now()
             update_order_volume_over_time_thread = threading.Thread(target=update_order_volume_over_time_graph_date, args=(time_unit, start_date, end_date))
             update_order_volume_over_time_thread.start()
             print(f"Started thread 'update_order_volume_over_time_graph_date'")
@@ -134,6 +137,7 @@ class DashboardService:
                 title=f"Order Volume Over {time_unit}",
                 labels={"Kategorie": "Kategorie", time_unit: "Wert"},
             )
+            self.log_with_timestamp("Completed update for bar plot", self._timestamps['CALL: update_order_volume_over_time_graph'])
             return fig
 
         def update_order_volume_over_time_graph_date(time_unit, start_date, end_date):
@@ -171,6 +175,7 @@ class DashboardService:
             ],
         )
         def update_pie_charts(start_date, end_date):
+            self._timestamps['CALL: update_pie_charts'] = datetime.datetime.now()
             print('Updating pie charts.')
             update_order_volume_over_customer_data_thread = threading.Thread(target=self.update_order_volume_over_customer_data, args=(start_date, end_date))
             update_order_volume_over_customer_data_thread.start()
@@ -246,6 +251,7 @@ class DashboardService:
                 )]
             )
 
+            self.log_with_timestamp("Completed update for pie charts", self._timestamps['CALL: update_pie_charts'])
             return pie_1, pie_2, pie_3, pie_4
 
         self.dashboard = dashboard
@@ -336,3 +342,11 @@ class DashboardService:
                                                                'OrderVolume')
         print(f'Aggregated OrderVolumePerSalesPerson over SalesPersonID. Result: {aggregated_table.shape[0]} rows')
         self._order_volume_over_sales_person_data_queue.put(aggregated_table)
+
+    def log_with_timestamp(self, message, duration_timestamp):
+        now = datetime.datetime.now()
+        delta = now - duration_timestamp
+        duration = delta.microseconds / 1000
+        timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
+        print(f"[{timestamp}] {message}")
+        print(f'Duration: {duration:.3f} milliseconds')
