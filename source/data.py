@@ -95,28 +95,28 @@ def get_default_data_store_directory():
 def aggregate_by_time_unit(df, time_unit):
     # Erstelle eine neue Spalte für die Zeit-Einheit
     if time_unit == 'year':
-        year_df = df[['OrderDateYear', 'TimeUnitYear', 'TotalDue']]
+        year_df = df[['OrderDateYear', 'TimeUnitYear', 'OrderVolume']]
         aggregated_df = year_df.groupby(['OrderDateYear', 'TimeUnitYear'])[
-            'TotalDue'].sum().reset_index()
-        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitYear': 'TimeUnit'}, inplace=True)
+            'OrderVolume'].sum().reset_index()
+        aggregated_df.rename(columns={'TimeUnitYear': 'TimeUnit'}, inplace=True)
 
     elif time_unit == 'month':
-        month_df = df[['OrderDateYear','OrderDateMonth', 'TimeUnitMonth', 'TotalDue']]
+        month_df = df[['OrderDateYear','OrderDateMonth', 'TimeUnitMonth', 'OrderVolume']]
         aggregated_df = month_df.groupby(['OrderDateYear', 'OrderDateMonth', 'TimeUnitMonth'])[
-            'TotalDue'].sum().reset_index()
-        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitMonth': 'TimeUnit'}, inplace=True)
+            'OrderVolume'].sum().reset_index()
+        aggregated_df.rename(columns={'TimeUnitMonth': 'TimeUnit'}, inplace=True)
 
     elif time_unit == 'quarter':
-        quarter_df = df[['OrderDateYear','OrderDateQuarter', 'TimeUnitQuarter', 'TotalDue']]
+        quarter_df = df[['OrderDateYear','OrderDateQuarter', 'TimeUnitQuarter', 'OrderVolume']]
         aggregated_df = quarter_df.groupby(['OrderDateYear', 'OrderDateQuarter', 'TimeUnitQuarter'])[
-            'TotalDue'].sum().reset_index()
-        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitQuarter': 'TimeUnit'}, inplace=True)
+            'OrderVolume'].sum().reset_index()
+        aggregated_df.rename(columns={'TimeUnitQuarter': 'TimeUnit'}, inplace=True)
 
     elif time_unit == 'cw':
-        cw_df = df[['OrderDateYear','OrderDateCalenderWeek', 'TimeUnitCalenderWeek', 'TotalDue']]
+        cw_df = df[['OrderDateYear','OrderDateCalenderWeek', 'TimeUnitCalenderWeek', 'OrderVolume']]
         aggregated_df = cw_df.groupby(['OrderDateYear', 'OrderDateCalenderWeek', 'TimeUnitCalenderWeek'])[
-            'TotalDue'].sum().reset_index()
-        aggregated_df.rename(columns={'TotalDue': 'OrderVolume', 'TimeUnitCalenderWeek': 'TimeUnit'}, inplace=True)
+            'OrderVolume'].sum().reset_index()
+        aggregated_df.rename(columns={'TimeUnitCalenderWeek': 'TimeUnit'}, inplace=True)
 
     else:
         raise ValueError("Invalid time_unit. Choose from 'year', 'month', 'quarter', 'cw'.")

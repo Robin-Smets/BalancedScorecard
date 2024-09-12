@@ -50,9 +50,9 @@ class DashboardService:
         self._order_volume_over_sales_person_data_queue = queue.Queue()
 
     def fix_data(self):
-        self.dashboard_data['Sales.SalesOrderHeader'].loc[:, 'TotalDue'] = self.dashboard_data['Sales.SalesOrderHeader']['TotalDue'].str.replace(',', '.')
-        self.dashboard_data['Sales.SalesOrderHeader'].loc[:, 'TotalDue'] = pd.to_numeric(self.dashboard_data['Sales.SalesOrderHeader']['TotalDue'], errors='coerce')
-        self.dashboard_data['Sales.SalesOrderHeader']['TimeUnitYear'] = self.dashboard_data['Sales.SalesOrderHeader']['OrderDateYear'].astype(str)
+        self.dashboard_data['OrderVolumeCombined'].loc[:, 'OrderVolume'] = self.dashboard_data['OrderVolumeCombined']['OrderVolume'].str.replace(',', '.')
+        self.dashboard_data['OrderVolumeCombined'].loc[:, 'OrderVolume'] = pd.to_numeric(self.dashboard_data['OrderVolumeCombined']['OrderVolume'], errors='coerce')
+        self.dashboard_data['OrderVolumeCombined']['TimeUnitYear'] = self.dashboard_data['OrderVolumeCombined']['OrderDateYear'].astype(str)
 
         self.dashboard_data['OrderVolumePerCustomer'].loc[:, 'OrderVolume'] = self.dashboard_data['OrderVolumePerCustomer']['OrderVolume'].str.replace(',', '.')
         self.dashboard_data['OrderVolumePerCustomer'].loc[:, 'OrderVolume'] = pd.to_numeric(self.dashboard_data['OrderVolumePerCustomer']['OrderVolume'], errors='coerce')
@@ -150,7 +150,7 @@ class DashboardService:
                 self._order_volume_over_time_data_queue.put(pd.DataFrame())
 
             # Filter the data based on selected dates
-            dashboard_data = self.dashboard_data['Sales.SalesOrderHeader']
+            dashboard_data = self.dashboard_data['OrderVolumeCombined']
             filtered_data = dashboard_data[
                 (pd.to_datetime(dashboard_data['OrderDate'], errors='coerce') >= start_date) &
                 (pd.to_datetime(dashboard_data['OrderDate'], errors='coerce') <= end_date)
