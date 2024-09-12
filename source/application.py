@@ -1,7 +1,7 @@
-# application.py
-
+import os
 import threading
-import webview
+import webbrowser
+from kivy.clock import Clock
 from kivymd.app import MDApp
 from kivy.uix.gridlayout import GridLayout
 from kivymd.uix.pickers import MDDatePicker
@@ -10,9 +10,8 @@ from kivymd.uix.button import MDRaisedButton, MDIconButton
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.menu import MDDropdownMenu
 from threading import Thread
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl
+import sys
+import io
 
 class AppService:
     @property
@@ -89,14 +88,9 @@ class Application(MDApp):
         open_dashboard_thread.start()
 
     def open_dashboard_thread(self):
-        app = QApplication([])
-        window = QMainWindow()
-        view = QWebEngineView()
-        url = QUrl('http://127.0.0.1:8050')
-        view.setUrl(url)
-        window.setCentralWidget(view)
-        window.show()
-        app.exec_()
+        file_path = os.path.abspath("index.html")
+        url = f"file://{file_path}"
+        webbrowser.open(url)
 
     def run_dashboard(self):
         self.dashboard_server.run(host="127.0.0.1", port=8050, debug=False)
@@ -136,5 +130,4 @@ class MainFrame(GridLayout):
 
     def exit(self):
         pass
-
 
