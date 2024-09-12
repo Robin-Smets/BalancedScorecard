@@ -13,7 +13,7 @@ def load_data_store():
     db.import_tables_from_files('csv', directory=file_directory)
     data_store.databases[db.name] = db
     print('DataStore loaded')
-    dashboard_service.dashboard_data = data_store.databases[db.name].tables['Sales.SalesOrderHeader']
+    dashboard_service.dashboard_data = data_store.databases[db.name].tables
     dashboard_service.fix_data()
     print('Daahboard data loaded')
 
