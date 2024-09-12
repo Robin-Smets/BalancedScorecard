@@ -267,7 +267,7 @@ class DashboardService:
             self._order_volume_over_customer_data_queue.put(pd.DataFrame())
 
         # Filter the data based on selected dates
-        dashboard_data = self.dashboard_data['OrderVolumePerCustomer']
+        dashboard_data = self.dashboard_data['OrderVolumeCombined']
         filtered_data = dashboard_data[
             (pd.to_datetime(dashboard_data['OrderDate'], errors='coerce') >= start_date) &
             (pd.to_datetime(dashboard_data['OrderDate'], errors='coerce') <= end_date)
@@ -288,7 +288,7 @@ class DashboardService:
             self._order_volume_over_product_data_queue.put(pd.DataFrame())
 
         # Filter the data based on selected dates
-        dashboard_data = self.dashboard_data['OrderVolumePerProduct']
+        dashboard_data = self.dashboard_data['OrderVolumeCombined']
         filtered_data = dashboard_data[
             (pd.to_datetime(dashboard_data['OrderDate'], errors='coerce') >= start_date) &
             (pd.to_datetime(dashboard_data['OrderDate'], errors='coerce') <= end_date)
@@ -309,7 +309,7 @@ class DashboardService:
             self._order_volume_over_territory_data_queue.put(pd.DataFrame())
 
         # Filter the data based on selected dates
-        dashboard_data = self.dashboard_data['OrderVolumePerTerritory']
+        dashboard_data = self.dashboard_data['OrderVolumeCombined']
         print(dashboard_data.head())
         filtered_data = dashboard_data[
             (pd.to_datetime(dashboard_data['OrderDate'], errors='coerce') >= start_date) &
@@ -331,7 +331,7 @@ class DashboardService:
             self._order_volume_over_sales_person_data_queue.put(pd.DataFrame())
 
         # Filter the data based on selected dates
-        dashboard_data = self.dashboard_data['OrderVolumePerSalesPerson']
+        dashboard_data = self.dashboard_data['OrderVolumeCombined']
         print(dashboard_data.head())
         filtered_data = dashboard_data[
             (pd.to_datetime(dashboard_data['OrderDate'], errors='coerce') >= start_date) &
