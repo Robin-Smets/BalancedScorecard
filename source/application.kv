@@ -128,7 +128,8 @@
                             text: "Update Data Store"
                             icon: "content-save"
                             md_bg_color: app.theme_cls.primary_color
-                            size_hint_x: 0.5  # Halbe Breite für den ersten Button
+                            size_hint_x: 0.5
+                            on_press: app.update_data_store()
 
                         MDRaisedButton:
                             text: "Open Dashboard"
@@ -151,9 +152,16 @@
 
                 ScrollView:
                     id: console_scroll_view
+                    size_hint_x: 1
+                    size_hint_y: 1
 
-                    MDTextField:
+                    MDLabel:
                         id: console_text_field
+                        text: ""
                         size_hint_x: 1
-                        size_hint_y: 1
+                        size_hint_y: None
+                        height: self.texture_size[1]
+                        text_size: self.width, None  # Begrenze den Text auf die Breite
+                        halign: 'left'  # Linksbündige Ausrichtung
+                        padding: 10, 10  # Füge etwas Abstand zum Rand hinzu
 

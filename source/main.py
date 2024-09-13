@@ -17,6 +17,12 @@ def load_data_store():
     dashboard_service.fix_data()
     print('Daahboard data loaded')
 
+def connect_to_live_db():
+    db = Database(live_db=True)
+    result = db.execute_query('SELECT COUNT(*) FROM Sales.SalesOrderHeader')
+    for row in result:
+        print(row)
+
 def run_dashboard_server():
     dashboard_server.run(host='127.0.0.1', port=8050)
     print('Dashboard server started')
@@ -47,6 +53,11 @@ if __name__ == '__main__':
     load_data_store_thread.daemon = True
     load_data_store_thread.start()
     print('Thread started: load_data_store_thread')
+
+    # connect to live db
+    connect_to_live_db_thread = Thread(target=connect_to_live_db)
+    connect_to_live_db_thread.daemon = True
+    connect_to_live_db_thread.start()
 
     # set up api routes
     @dashboard_server.route("/api/data")

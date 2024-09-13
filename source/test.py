@@ -1,9 +1,19 @@
-import gi
-from gi.repository import Gtk
+import pyodbc
 
-def test_gtk():
-    Gtk.init(None)
-    print("GTK is working")
+conn_str = (
+    "DRIVER={ODBC Driver 18 for SQL Server};"
+    "SERVER=localhost;"  # oder IP-Adresse des Servers
+    "DATABASE=AdventureWorks2022;"
+    "UID=sa;"
+    "PWD=@Splitsoul3141;"
+    "TrustServerCertificate=yes;"
+)
 
-if __name__ == "__main__":
-    test_gtk()
+try:
+    conn = pyodbc.connect(conn_str)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM Sales.SalesOrderHeader")
+    for row in cursor:
+        print(row)
+except pyodbc.Error as e:
+    print("Error:", e)

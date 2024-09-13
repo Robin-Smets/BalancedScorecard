@@ -1,3 +1,4 @@
+import datetime
 import os
 import threading
 import webbrowser
@@ -87,10 +88,19 @@ class Application(MDApp):
         open_dashboard_thread.daemon = True
         open_dashboard_thread.start()
 
+    def update_data_store(self):
+        update_data_store_thread = Thread(target=self.update_data_store_thread)
+        update_data_store_thread.daemon = True
+        update_data_store_thread.start()
+
+    def update_data_store_thread(self):
+        Clock.schedule_once(lambda dt: self._main_frame.append_user_log('Data store updated'))
+
     def open_dashboard_thread(self):
         file_path = os.path.abspath("index.html")
         url = f"file://{file_path}"
         webbrowser.open(url)
+        Clock.schedule_once(lambda dt: self._main_frame.append_user_log('Dashboard started'))
 
     def run_dashboard(self):
         self.dashboard_server.run(host="127.0.0.1", port=8050, debug=False)
@@ -131,3 +141,7 @@ class MainFrame(GridLayout):
     def exit(self):
         pass
 
+    def append_user_log(self, message):
+        log_text = self.ids.console_text_field.text
+        log_text += f'[{datetime.datetime.now().strftime("%d.%m.%Y - %H:%M:%S")}] {message}\n'
+        self.ids.console_text_field.text = log_text

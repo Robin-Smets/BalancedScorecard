@@ -1,4 +1,6 @@
-from sqlalchemy import create_engine
+# data.py
+
+import pyodbc
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -32,17 +34,43 @@ class Database:
     def name(self, value):
         self._name = value
 
-    def __init__(self, servername='', database='', driver='', create_engine=False):
-        if create_engine:
-            if servername != '' and database != '' and driver != '':
-                self._engine = create_engine(f'mssql+pyodbc://{servername}/{database}?driver={driver}')
-            else:
-                raise Exception("The connection parameters are missing.")
+    def __init__(self, servername='', database='', driver='', live_db=False):
+        if live_db:
+            self._conn_str = (
+                "DRIVER={ODBC Driver 18 for SQL Server};"
+                "SERVER=localhost;"  # oder IP-Adresse des Servers
+                "DATABASE=AdventureWorks2022;"
+                "UID=sa;"
+                "PWD=@Splitsoul3141;"
+                "TrustServerCertificate=yes;"
+            )
 
         if database != '':
             self._name = database
 
         self._tables = {}
+
+    def execute_query(self, query):
+        try:
+            connection = pyodbc.connect(self._conn_str)
+            cursor = connection.cursor()
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            cursor.close()
+            connection.close()
+            return rows
+        except Exception as e:
+            print(e)
+            return None
+
+    def create_dataframe_from_query(self, query):
+        try:
+            with (self.engine.connect() as connection):
+                result = pd.read_sql_query(query, connection)
+                return result
+        except Exception as e:
+            print(e)
+
 
     #  TODO: make more generic
     # def load_tables(self, tables):
