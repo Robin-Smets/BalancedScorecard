@@ -36,15 +36,14 @@
             width: 50
             on_press: root.exit()
 
-
     MDBoxLayout:
         id: content_box
         orientation: 'horizontal'
 
 
         MDBoxLayout:
-            size_hint_x: 0.1
-            size_hint_y: 0.9
+            size_hint_x: 0.5
+            size_hint_y: 1
             pos_hint: {'center_y': 0.5}
             padding: dp(20)
 
@@ -55,132 +54,180 @@
                 MDBoxLayout:
                     orientation: "vertical"
 
-                    MDGridLayout:
-                        cols: 2  # Zwei Spalten (Labels + Buttons)
-                        row_default_height: dp(50)  # Feste Höhe für jede Zeile
-                        padding: dp(20)  # Abstand um das Layout herum
-                        spacing: dp(10)  # Abstand zwischen den Elementen
-
-                        # Erste Zeile: Label und Button
-                        MDLabel:
-                            text: "Start Date"
-                            size_hint_x: None
-                            width: dp(200)  # Feste Breite der ersten Spalte
-                            halign: "left"
-                            valign: "middle"
-                            text_size: self.size
-
-                        MDRaisedButton:
-                            id: start_date_button
-                            text: "Start Date"
-                            size_hint_x: 1  # Flexibler Platz
-                            on_press: root.open_date_picker('start')
-
-                        # Zweite Zeile: Label und Button
-                        MDLabel:
-                            text: "End Date"
-                            size_hint_x: None
-                            width: dp(200)
-                            halign: "left"
-                            valign: "middle"
-                            text_size: self.size
-
-                        MDRaisedButton:
-                            id: end_date_button
-                            text: "Button 2"
-                            size_hint_x: 1  # Flexibler Platz
-                            on_press: root.open_date_picker('end')
-
-                        # Dritte Zeile: Label und Button
-                        MDLabel:
-                            text: "Time Unit"
-                            size_hint_x: None
-                            width: dp(200)
-                            halign: "left"
-                            valign: "middle"
-                            text_size: self.size
-
-                        MDRaisedButton:
-                            id: time_unit_button
-                            text: "Month"
-                            size_hint_x: 1  # Flexibler Platz
-                            on_press: app.menu.open()
-
-                    # Mittlerer flexibler Platz
-                    BoxLayout:
+                    MDLabel:
+                        id: control_dashboard_label
+                        text: 'Dashboard'
+                        padding: [20, 0]
                         size_hint_y: None
-                        height: dp(0)  # Keine feste Höhe, um das mittlere Element responsiv zu gestalten
-                        canvas.before:
-                            Color:
-                                rgba: 0, 0, 0, 0
-                            Rectangle:
-                                size: self.size
-                                pos: self.pos
+                        height: 50
 
-                    # Unterer Bereich für zwei Buttons
+                    MDBoxLayout:
+                        height: 15
+                        size_hint_y: None
+
                     MDBoxLayout:
                         orientation: 'horizontal'
                         size_hint_y: None
-                        height: dp(80)  # Höhe für den unteren Bereich
+                        height: 40
                         padding: dp(10)
 
-                        MDRaisedButton:
-                            text: "Update Data Store"
-                            icon: "content-save"
-                            md_bg_color: app.theme_cls.primary_color
-                            size_hint_x: 0.5
-                            on_press: app.update_data_store()
 
-                        MDRaisedButton:
-                            text: "Open Dashboard"
-                            icon: "cancel"
+                        MDFillRoundFlatIconButton:
+                            id: perspective_combobox_button
+                            on_press: app.menu.open()
+                            text: "Financial Perspective"
                             md_bg_color: app.theme_cls.primary_color
-                            size_hint_x: 0.5  # Halbe Breite für den zweiten Button
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.45
+
+                        MDBoxLayout:
+                            size_hint_x: 0.1
+
+                        MDFillRoundFlatIconButton:
+                            id: open_dashboard_button
                             on_press: app.open_dashboard()
+                            text: "Open Dashboard"
+                            icon: "chart-bar"
+                            md_bg_color: app.theme_cls.primary_color
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.45
 
                     MDBoxLayout:
-                        orientation: 'vertical'
+                        height: 25
+                        size_hint_y: None
+
+
+                    MDLabel:
+                        id: control_data_store_label
+                        text: 'Data Store'
+                        padding: [20, 0]
+                        size_hint_y: None
+                        height: 50
+
+                    MDBoxLayout:
+                        height: 15
+                        size_hint_y: None
+
+                    MDBoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: 40
+                        padding: dp(10)
+
+                        MDFillRoundFlatIconButton:
+                            id: from_date_button
+                            on_press: root.open_date_picker('from')
+                            text: "From"
+                            md_bg_color: app.theme_cls.primary_color
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.45
 
                         MDBoxLayout:
-                            orientation: 'horizontal'
-                            size_hint_y: None
-                            height: dp(80)  # Höhe für den unteren Bereich
-                            padding: dp(10)
+                            size_hint_x: 0.1
 
-                            MDLabel:
-                                text: "Crypto Key"
-                                size_hint_x: None
-                                width: dp(200)  # Feste Breite der ersten Spalte
-                                halign: "left"
-                                valign: "middle"
-                                text_size: self.size
+                        MDFillRoundFlatIconButton:
+                            id: update_data_store_button
+                            on_press: app.update_data_store()
+                            text: "Update Data Store"
+                            icon: 'database-refresh'
+                            md_bg_color: app.theme_cls.primary_color
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.45
 
-                            MDTextField:
-                                id: crypto_key_text_field
+                    MDBoxLayout:
+                        height: 5
+                        size_hint_y: None
+
+                    MDBoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: 40
+                        padding: dp(10)
+
+                        MDFillRoundFlatIconButton:
+                            id: until_date_button
+                            on_press: root.open_date_picker('until')
+                            text: "Until"
+                            md_bg_color: app.theme_cls.primary_color
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.45
 
                         MDBoxLayout:
-                            orientation: 'horizontal'
+                            size_hint_x: 0.1
+
+                        MDFillRoundFlatIconButton:
+                            id: clear_data_store_button
+                            on_press: app.clear_data_store()
+                            text: "Clear Data Store"
+                            icon: 'delete'
+                            md_bg_color: app.theme_cls.primary_color
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.45
+
+                    MDBoxLayout:
+                        height: 25
+                        size_hint_y: None
+
+                    MDBoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: 50
+
+                        MDLabel:
+                            id: control_crypto_key_label
+                            text: 'Crypto Key'
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            padding: [20, 0]
                             size_hint_y: None
-                            height: dp(80)  # Höhe für den unteren Bereich
-                            padding: dp(10)
+                            height: 50
+                            size_hint_x: 0.5
 
-                            MDRaisedButton:
-                                text: "Encrypt Data Store"
-                                icon: "content-save"
-                                md_bg_color: app.theme_cls.primary_color
-                                size_hint_x: 0.5
-                                on_press: app.encrypt_data_store()
+                        MDTextField:
+                            id: crypto_key_text_field
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.46
 
-                            MDRaisedButton:
-                                text: "Decrypt Data Store"
-                                icon: "cancel"
-                                md_bg_color: app.theme_cls.primary_color
-                                size_hint_x: 0.5  # Halbe Breite für den zweiten Button
-                                on_press: app.decrypt_data_store()
+                        MDBoxLayout:
+                            size_hint_x: 0.04
+
+                    MDBoxLayout:
+                        height: 15
+                        size_hint_y: None
+
+                    MDBoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: 40
+                        padding: dp(10)
+
+                        MDFillRoundFlatIconButton:
+                            id: encrypt_data_store_button
+                            on_press: app.encrypt_data_store()
+                            text: "Encrypt Data Store"
+                            icon: "lock"
+                            md_bg_color: app.theme_cls.primary_color
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.45
+
+                        MDBoxLayout:
+                            size_hint_x: 0.1
+
+                        MDFillRoundFlatIconButton:
+                            id: open_dashboard_button
+                            on_press: app.encrypt_data_store()
+                            text: "Open Dashboard"
+                            icon: "lock-open-variant"
+                            md_bg_color: app.theme_cls.primary_color
+                            pos_hint: {"center_x": .5, "center_y": .5}
+                            size_hint_x: 0.45
+
+                    MDBoxLayout:
+                        size_hint_y: 0.5
+
         MDBoxLayout:
             id: console_box
-            size_hint_x: 0.1
-            size_hint_y: 0.9
+            size_hint_x: 0.5
+            size_hint_y: 1
             pos_hint: {'center_y': 0.5}
             padding: dp(20)
 
@@ -202,4 +249,3 @@
                         text_size: self.width, None  # Begrenze den Text auf die Breite
                         halign: 'left'  # Linksbündige Ausrichtung
                         padding: 10, 10  # Füge etwas Abstand zum Rand hinzu
-

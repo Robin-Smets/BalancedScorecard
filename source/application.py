@@ -7,7 +7,7 @@ from kivymd.app import MDApp
 from kivy.uix.gridlayout import GridLayout
 from kivymd.uix.pickers import MDDatePicker
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDRaisedButton, MDIconButton
+from kivymd.uix.button import MDRaisedButton, MDIconButton, MDFillRoundFlatIconButton
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.menu import MDDropdownMenu
 from threading import Thread
@@ -79,22 +79,23 @@ class Application(MDApp):
         self._main_frame = MainFrame()
         self.theme_cls.primary_palette = "Blue"
         self.theme_cls.theme_style = "Light"
+        menu_item_texts = ['Financial Perspective', 'Customer Perspective', 'Process Perspective', 'Innovation Perspective']
         menu_items = [
             {
-                "text": f"Item {i}",
+                "text": menu_item_text,
                 "viewclass": "OneLineListItem",
-                "on_release": lambda x=f"Item {i}": self.menu_callback(x),
-            } for i in range(5)
+                "on_release": lambda x=menu_item_text: self.menu_callback(x),
+            } for menu_item_text in menu_item_texts
         ]
         self.menu = MDDropdownMenu(
-            caller=self._main_frame.ids.time_unit_button,
+            caller=self._main_frame.ids.perspective_combobox_button,
             items=menu_items,
             width_mult=4,
         )
         return self._main_frame
 
     def menu_callback(self, text_item):
-        print(text_item)
+        print(f'{text_item} selected')
 
     def open_dashboard(self):
         open_dashboard_thread = Thread(target=self.open_dashboard_thread)
@@ -155,10 +156,10 @@ class MainFrame(GridLayout):
         date_dialog.open()
 
     def set_date(self, date_type, date_value):
-        if date_type == 'start':
-            self.ids.start_date_button.text = str(date_value)
-        elif date_type == 'end':
-            self.ids.end_date_button.text = str(date_value)
+        if date_type == 'from':
+            self.ids.from_date_button.text = str(date_value)
+        elif date_type == 'until':
+            self.ids.until_date_button.text = str(date_value)
 
     def open_options_dialog(self):
         self.dialog = MDDialog(
