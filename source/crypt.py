@@ -40,19 +40,27 @@ def encrypt_file(file_path: str, key: bytes):
     """
     Encrypts a file using AES encryption.
     """
+    # Generate a random salt and IV
     salt = os.urandom(SALT_SIZE)
-    cipher = Cipher(algorithms.AES(derive_key(key, salt)), modes.CFB(os.urandom(AES_BLOCK_SIZE)),
-                    backend=default_backend())
+    iv = os.urandom(AES_BLOCK_SIZE)
+
+    # Derive key using PBKDF2
+    cipher_key = derive_key(key, salt)
+
+    # Create AES cipher in CFB mode with the generated IV
+    cipher = Cipher(algorithms.AES(cipher_key), modes.CFB(iv), backend=default_backend())
     encryptor = cipher.encryptor()
 
+    # Read the original file data
     with open(file_path, 'rb') as file:
         data = file.read()
 
+    # Encrypt the data
     encrypted_data = encryptor.update(data) + encryptor.finalize()
 
-    # Save encrypted data with salt and iv
+    # Save encrypted data with salt and iv at the beginning of the file
     with open(file_path + '.enc', 'wb') as file:
-        file.write(salt + cipher.algorithm.key + cipher.mode.iv + encrypted_data)
+        file.write(salt + iv + encrypted_data)
 
 
 def decrypt_file(file_path: str, key: bytes):
@@ -62,14 +70,19 @@ def decrypt_file(file_path: str, key: bytes):
     with open(file_path, 'rb') as file:
         data = file.read()
 
+    # Extract the salt, iv, and encrypted data
     salt = data[:SALT_SIZE]
-    key = derive_key(key, salt)
-    iv = data[SALT_SIZE + AES_KEY_SIZE:SALT_SIZE + AES_KEY_SIZE + AES_BLOCK_SIZE]
-    encrypted_data = data[SALT_SIZE + AES_KEY_SIZE + AES_BLOCK_SIZE:]
+    iv = data[SALT_SIZE:SALT_SIZE + AES_BLOCK_SIZE]
+    encrypted_data = data[SALT_SIZE + AES_BLOCK_SIZE:]
 
-    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=default_backend())
+    # Derive the key again using the same salt
+    cipher_key = derive_key(key, salt)
+
+    # Create AES cipher in CFB mode with the extracted IV
+    cipher = Cipher(algorithms.AES(cipher_key), modes.CFB(iv), backend=default_backend())
     decryptor = cipher.decryptor()
 
+    # Decrypt the data
     decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
 
     # Save decrypted data
@@ -77,25 +90,26 @@ def decrypt_file(file_path: str, key: bytes):
         file.write(decrypted_data)
 
 
-def encrypt_data_store(directory: str=''):
+
+def encrypt_data_store(directory: str='', key: str=''):
     """
     Encrypts all files in the specified directory.
     """
     if directory == '':
         directory = DATA_DIR
-    key = getpass.getpass(prompt="Enter encryption key: ").encode()
+
     for filename in os.listdir(directory):
         if not filename.endswith('.enc'):
-            encrypt_file(os.path.join(directory, filename), key)
+            encrypt_file(os.path.join(directory, filename), key.encode())
 
 
-def decrypt_data_store(directory: str=''):
+def decrypt_data_store(directory: str='', key: str=''):
     """
     Decrypts all files in the specified directory.
     """
     if directory == '':
         directory = DATA_DIR
-    key = getpass.getpass(prompt="Enter decryption key: ").encode()
+
     for filename in os.listdir(directory):
         if filename.endswith('.enc'):
-            decrypt_file(os.path.join(directory, filename), key)
+            decrypt_file(os.path.join(directory, filename), key.encode())

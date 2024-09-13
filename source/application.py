@@ -135,7 +135,7 @@ class Application(MDApp):
         encrypt_data_store_thread.start()
 
     def encrypt_data_store_thread(self):
-        encrypt_data_store()
+        encrypt_data_store(key=self._main_frame.ids.crypto_key_text_field.text)
         Clock.schedule_once(lambda dt: self._main_frame.append_user_log('DataStore encrypted'))
 
     def decrypt_data_store(self):
@@ -145,7 +145,7 @@ class Application(MDApp):
         decrypt_data_store_thread.start()
 
     def decrypt_data_store_thread(self):
-        decrypt_data_store()
+        decrypt_data_store(key=self._main_frame.ids.crypto_key_text_field.text)
         Clock.schedule_once(lambda dt: self._main_frame.append_user_log('DataStore decrypted'))
 
 class MainFrame(GridLayout):
