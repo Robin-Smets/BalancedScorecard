@@ -13,6 +13,10 @@ from kivymd.uix.menu import MDDropdownMenu
 from threading import Thread
 import sys
 import io
+from data import read_sql_from_file
+from crypt import encrypt_data_store, decrypt_data_store
+from source.services import ServiceProvider
+
 
 class AppService:
     @property
@@ -48,6 +52,14 @@ class AppService:
 class Application(MDApp):
 
     @property
+    def services(self):
+        return self._services
+
+    @services.setter
+    def services(self, value):
+        self._services = value
+
+    @property
     def dashboard_server(self):
         return self._dashboard_server
 
@@ -60,6 +72,7 @@ class Application(MDApp):
         self._dashboard = None
         self._dashboard_server = None
         self._main_frame = None
+        self.services = None
 
 
     def build(self):
@@ -94,6 +107,16 @@ class Application(MDApp):
         update_data_store_thread.start()
 
     def update_data_store_thread(self):
+        Clock.schedule_once(lambda dt: self._main_frame.append_user_log('Updating data store'))
+        app_path = os.getcwd()
+        parent_dir = os.path.dirname(app_path)
+        sql_path = f'{parent_dir}/sql/OrderVolumeCombined.sql'
+        query = read_sql_from_file(sql_path)
+        services = self.services
+        print(services.services.keys())
+        data_store = services.get_service('DataStore')
+        db = data_store.databases['AdventureWorks2022']
+        db.export_query_to_csv(query,f'{data_store.file_directory}/OrderVolumeCombined.csv')
         Clock.schedule_once(lambda dt: self._main_frame.append_user_log('Data store updated'))
 
     def open_dashboard_thread(self):
@@ -105,6 +128,25 @@ class Application(MDApp):
     def run_dashboard(self):
         self.dashboard_server.run(host="127.0.0.1", port=8050, debug=False)
 
+    def encrypt_data_store(self):
+        Clock.schedule_once(lambda dt: self._main_frame.append_user_log('Encrypting data store'))
+        encrypt_data_store_thread = Thread(target=self.encrypt_data_store_thread)
+        encrypt_data_store_thread.daemon = True
+        encrypt_data_store_thread.start()
+
+    def encrypt_data_store_thread(self):
+        encrypt_data_store()
+        Clock.schedule_once(lambda dt: self._main_frame.append_user_log('DataStore encrypted'))
+
+    def decrypt_data_store(self):
+        Clock.schedule_once(lambda dt: self._main_frame.append_user_log('Decrypting data store'))
+        decrypt_data_store_thread = Thread(target=self.decrypt_data_store_thread)
+        decrypt_data_store_thread.daemon = True
+        decrypt_data_store_thread.start()
+
+    def decrypt_data_store_thread(self):
+        decrypt_data_store()
+        Clock.schedule_once(lambda dt: self._main_frame.append_user_log('DataStore decrypted'))
 
 class MainFrame(GridLayout):
     def open_date_picker(self, date_type):
@@ -145,3 +187,4 @@ class MainFrame(GridLayout):
         log_text = self.ids.console_text_field.text
         log_text += f'[{datetime.datetime.now().strftime("%d.%m.%Y - %H:%M:%S")}] {message}\n'
         self.ids.console_text_field.text = log_text
+

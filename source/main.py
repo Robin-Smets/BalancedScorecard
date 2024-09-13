@@ -18,10 +18,9 @@ def load_data_store():
     print('Daahboard data loaded')
 
 def connect_to_live_db():
-    db = Database(live_db=True)
-    result = db.execute_query('SELECT COUNT(*) FROM Sales.SalesOrderHeader')
-    for row in result:
-        print(row)
+    db = Database(database='AdventureWorks2022', live_db=True)
+    data_store.databases[db.name] = db
+    print('Live DB registered')
 
 def run_dashboard_server():
     dashboard_server.run(host='127.0.0.1', port=8050)
@@ -46,6 +45,7 @@ if __name__ == '__main__':
     services.register_service('DataStore', data_store)
     services.register_service('AppService', app_service)
     services.register_service('DashboardService', dashboard_service)
+    app.services = services
     print('Service registered')
 
     # load data store

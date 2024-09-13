@@ -55,13 +55,25 @@ class Database:
             connection = pyodbc.connect(self._conn_str)
             cursor = connection.cursor()
             cursor.execute(query)
+            columns = [column[0] for column in cursor.description]
             rows = cursor.fetchall()
             cursor.close()
             connection.close()
-            return rows
+            return columns, rows
         except Exception as e:
             print(e)
             return None
+
+    def export_query_to_csv(self, query, file_path, delimiter=';', encoding='utf-8'):
+        columns, rows = self.execute_query(query)
+        if columns and rows:
+            df = pd.DataFrame.from_records(rows, columns=columns)
+            df.to_csv(file_path, sep=delimiter, index=False, encoding=encoding)
+            print(f"Data exported to {file_path}")
+        else:
+            print("No data to export.")
+
+
 
     def create_dataframe_from_query(self, query):
         try:
@@ -273,3 +285,21 @@ def convert_to_float(x):
             return x
     except ValueError:
         return np.nan  # Oder 0, je nach gewünschter Fehlerbehandlung
+
+def read_sql_from_file(file_path):
+        """
+        Liest den Inhalt einer .sql Datei und gibt ihn als String zurück.
+
+        :param file_path: Pfad zur SQL-Datei.
+        :return: Inhalt der SQL-Datei als String.
+        """
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                sql_query = file.read()
+            return sql_query
+        except FileNotFoundError:
+            print(f"Die Datei {file_path} wurde nicht gefunden.")
+            return None
+        except IOError as e:
+            print(f"Fehler beim Lesen der Datei {file_path}: {e}")
+            return None

@@ -138,7 +138,25 @@
                             size_hint_x: 0.5  # Halbe Breite für den zweiten Button
                             on_press: app.open_dashboard()
 
+                    MDBoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: dp(80)  # Höhe für den unteren Bereich
+                        padding: dp(10)
 
+                        MDRaisedButton:
+                            text: "Encrypt Data Store"
+                            icon: "content-save"
+                            md_bg_color: app.theme_cls.primary_color
+                            size_hint_x: 0.5
+                            on_press: app.encrypt_data_store()
+
+                        MDRaisedButton:
+                            text: "Decrypt Data Store"
+                            icon: "cancel"
+                            md_bg_color: app.theme_cls.primary_color
+                            size_hint_x: 0.5  # Halbe Breite für den zweiten Button
+                            on_press: app.decrypt_data_store()
         MDBoxLayout:
             id: web_view
             size_hint_x: 0.1
