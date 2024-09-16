@@ -17,6 +17,7 @@ import io
 from data import read_sql_from_file
 from crypt import encrypt_data_store, decrypt_data_store
 from source.services import Logger
+from view import MainFrame
 
 
 class Application(MDApp):
@@ -119,43 +120,5 @@ class Application(MDApp):
         decrypt_data_store(key=self._main_frame.ids.crypto_key_text_field.text)
         Clock.schedule_once(lambda dt: self._main_frame.append_user_log('DataStore decrypted'))
 
-class MainFrame(GridLayout):
-    def open_date_picker(self, date_type):
-        date_dialog = MDDatePicker()
-        date_dialog.bind(on_save=lambda instance, value, date_range: self.set_date(date_type, value))
-        date_dialog.open()
 
-    def set_date(self, date_type, date_value):
-        if date_type == 'from':
-            self.ids.from_date_button.text = str(date_value)
-        elif date_type == 'until':
-            self.ids.until_date_button.text = str(date_value)
-
-    def open_options_dialog(self):
-        self.dialog = MDDialog(
-            title="Options",
-            text="Hier können verschiedene Programmeinstellungen vorgenommen werden.",
-            buttons=[
-                MDRaisedButton(
-                    text="OK",
-                    on_release=lambda x: self.dialog.dismiss()
-                ),
-                MDRaisedButton(
-                    text="Cancel",
-                    on_release=lambda x: self.dialog.dismiss()
-                ),
-            ],
-        )
-        self.dialog.open()
-
-    def open_login_dialog(self):
-        pass
-
-    def exit(self):
-        pass
-
-    def append_user_log(self, message):
-        log_text = self.ids.console_text_field.text
-        log_text += f'[{datetime.datetime.now().strftime("%d.%m.%Y - %H:%M:%S")}] {message}\n'
-        self.ids.console_text_field.text = log_text
 
