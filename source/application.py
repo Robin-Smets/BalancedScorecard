@@ -15,7 +15,6 @@ import sys
 import io
 from data import read_sql_from_file
 from crypt import encrypt_data_store, decrypt_data_store
-from source.services import ServiceProvider
 
 
 class AppService:

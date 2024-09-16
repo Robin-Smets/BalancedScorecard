@@ -2,7 +2,6 @@
 from flask import Flask, jsonify
 
 from application import Application, AppService
-from services import ServiceProvider
 from data import DataStore, Database, get_default_data_store_directory
 from dashboard import DashboardService
 from threading import Thread
@@ -33,7 +32,7 @@ if __name__ == '__main__':
     print('Application configured')
 
     # create objects
-    services = ServiceProvider()
+    services = dict()
     app_service = AppService()
     dashboard_service = DashboardService()
     data_store = DataStore(file_directory)
@@ -42,9 +41,9 @@ if __name__ == '__main__':
     print('Objects created')
 
     # register services
-    services.register_service('DataStore', data_store)
-    services.register_service('AppService', app_service)
-    services.register_service('DashboardService', dashboard_service)
+    services["DataStore"] = data_store
+    services["AppService"] = app_service
+    services["DashboardService"] = dashboard_service
     app.services = services
     print('Service registered')
 

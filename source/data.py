@@ -6,7 +6,9 @@ import pandas as pd
 import dask.dataframe as dd
 import os
 from pathlib import Path
-from services import ServiceProvider
+
+from kivy.app import App
+
 
 
 class Database:
@@ -93,7 +95,8 @@ class Database:
 
     def import_tables_from_files(self, file_extension, directory=''):
         if directory == '':
-            directory = ServiceProvider().get_service('DataStore').file_directory
+            data_store = App.get_running_app().services["DataStore"]
+            directory = data_store.file_directory
         for filename in os.listdir(directory):
             if filename.endswith(f'.{file_extension}'):
                 file_path = os.path.join(directory, filename)

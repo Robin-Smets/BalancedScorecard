@@ -9,7 +9,6 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 from data import aggregate_by_time_unit, aggregate_by_column_with_percentage
-from source.services import ServiceProvider
 
 
 class DashboardService:
