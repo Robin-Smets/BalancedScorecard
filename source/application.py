@@ -17,37 +17,6 @@ from data import read_sql_from_file
 from crypt import encrypt_data_store, decrypt_data_store
 
 
-class AppService:
-    @property
-    def app(self):
-        return self._app
-
-    @app.setter
-    def app(self, value):
-        self._app = value
-
-    @property
-    def dashboard(self):
-        return self._dashboard
-
-    @dashboard.setter
-    def dashboard(self, value):
-        self._dashboard = value
-
-    @property
-    def dashboard_server(self):
-        return self._dashboard_server
-
-    @dashboard_server.setter
-    def dashboard_server(self, value):
-        self._dashboard_server = value
-
-    def __init__(self):
-        self._app = None
-        self._dashboard = None
-        self._dashboard_server = None
-
-
 class Application(MDApp):
 
     @property
