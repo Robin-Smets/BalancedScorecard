@@ -14,7 +14,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from threading import Thread
 import sys
 import io
-from data import read_sql_from_file
+from data import read_sql_from_file, Database
 from crypt import encrypt_data_store, decrypt_data_store
 from source.services import Logger
 from view import MainFrame
@@ -120,5 +120,25 @@ class Application(MDApp):
         decrypt_data_store(key=self._main_frame.ids.crypto_key_text_field.text)
         Clock.schedule_once(lambda dt: self._main_frame.append_user_log('DataStore decrypted'))
 
+    def load_data_store(self):
+        data_store = self.services["DataStore"]
+        dashboard_service = self.services["DashboardService"]
+        db = Database(database='AdventureWorks2022DS')
+        db.import_tables_from_files('csv', directory=data_store.file_directory)
+        data_store.databases[db.name] = db
+        print('DataStore loaded')
+        dashboard_service.dashboard_data = data_store.databases[db.name].tables
+        # dashboard_service.fix_data()
+        print('Daahboard data loaded')
 
+    def connect_to_live_db(self):
+        data_store = self.services["DataStore"]
+        db = Database(database='AdventureWorks2022', live_db=True)
+        data_store.databases[db.name] = db
+        print('Live DB registered')
+
+    def run_dashboard_server(self):
+        dashboard_service = self.services["DashboardService"]
+        dashboard_service.dashboard_server.run(host='127.0.0.1', port=8050)
+        print('Dashboard server started')
 
