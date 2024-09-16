@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import threading
 import webbrowser
@@ -15,6 +16,7 @@ import sys
 import io
 from data import read_sql_from_file
 from crypt import encrypt_data_store, decrypt_data_store
+from source.services import Logger
 
 
 class Application(MDApp):
