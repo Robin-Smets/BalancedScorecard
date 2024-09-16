@@ -6,10 +6,7 @@ import pandas as pd
 import dask.dataframe as dd
 import os
 from pathlib import Path
-
 from kivy.app import App
-
-
 
 class Database:
     @property

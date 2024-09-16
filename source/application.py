@@ -3,6 +3,8 @@ import logging
 import os
 import threading
 import webbrowser
+
+from flask import Flask
 from kivy.clock import Clock
 from kivymd.app import MDApp
 from kivy.uix.gridlayout import GridLayout
@@ -64,6 +66,19 @@ class Application(MDApp):
             width_mult=4,
         )
         return self._main_frame
+
+    def initialize(self):
+        self._dashboard_server = Flask('dashboard_server')
+        thread_manager = self.services["ThreadManager"]
+
+        # load data store
+        thread_manager.start_daemon_thread(self.load_data_store)
+        thread_manager.start_daemon_thread(self.connect_to_live_db)
+
+        # initialize dashboard service
+        dashboard_service = self.services["DashboardService"]
+        dashboard_service.create_dashboard()
+        thread_manager.start_daemon_thread(self.run_dashboard_server)
 
     def menu_callback(self, text_item):
         print(f'{text_item} selected')
@@ -138,7 +153,5 @@ class Application(MDApp):
         print('Live DB registered')
 
     def run_dashboard_server(self):
-        dashboard_service = self.services["DashboardService"]
-        dashboard_service.dashboard_server.run(host='127.0.0.1', port=8050)
+        self.dashboard_server.run(host='127.0.0.1', port=8050)
         print('Dashboard server started')
-

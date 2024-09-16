@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
+from kivy.app import App
+
 from data import aggregate_by_time_unit, aggregate_by_column_with_percentage
 
 
@@ -68,11 +70,12 @@ class DashboardService:
         print('Fixed data')
 
     def create_dashboard(self):
+        dashboard_server = App.get_running_app().dashboard_server
         # Set realistic date limits that Pandas can handle
         min_real_date = '1900-01-01'
         max_real_date = '2200-04-11'  # Upper bound for pandas datetime64
 
-        dashboard = dash.Dash('dashboard_server', self.dashboard_server, external_stylesheets=[dbc.themes.BOOTSTRAP])
+        dashboard = dash.Dash('dashboard_server', dashboard_server, external_stylesheets=[dbc.themes.BOOTSTRAP])
         dashboard.layout = dbc.Container(
             [
                 html.H1("Order Volume"),

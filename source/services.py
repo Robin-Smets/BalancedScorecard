@@ -79,9 +79,10 @@ class ThreadManager:
 
     @property
     def logger(self):
-        return App.get_running_app().logger
+        return self._logger
 
-    def __init__(self, max_workers=5):
+    def __init__(self, logger,max_workers=5):
+        self._logger = logger
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
 
     def submit_task(self, task, callback=None):
