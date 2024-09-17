@@ -3,6 +3,7 @@ from datetime import datetime
 from kivy.uix.gridlayout import GridLayout
 from kivymd.uix.button import MDRaisedButton
 from kivymd.uix.dialog import MDDialog
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.pickers import MDDatePicker
 
 
@@ -45,3 +46,18 @@ class MainFrame(GridLayout):
         log_text = self.ids.console_text_field.text
         log_text += f'[{datetime.now().strftime("%d.%m.%Y - %H:%M:%S")}] {message}\n'
         self.ids.console_text_field.text = log_text
+
+def create_dropdown_menu(menu_item_texts, menu_callback, caller):
+    menu_items = [
+        {
+            "text": menu_item_text,
+            "viewclass": "OneLineListItem",
+            "on_release": lambda x=menu_item_text: menu_callback(x),
+        } for menu_item_text in menu_item_texts
+    ]
+    menu = MDDropdownMenu(
+        caller=caller,
+        items=menu_items,
+        width_mult=4,
+    )
+    return menu

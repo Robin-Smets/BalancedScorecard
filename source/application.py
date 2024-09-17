@@ -19,7 +19,7 @@ import io
 from data import read_sql_from_file, Database
 from crypt import encrypt_data_store, decrypt_data_store
 from source.services import Logger
-from view import MainFrame
+from view import MainFrame, create_dropdown_menu
 
 
 class Application(MDApp):
@@ -46,24 +46,20 @@ class Application(MDApp):
         self._dashboard_server = None
         self._main_frame = None
         self.services = None
+        self._perspective_dropdown = None
 
 
     def build(self):
         self._main_frame = MainFrame()
         self.theme_cls.primary_palette = "Blue"
         self.theme_cls.theme_style = "Light"
-        menu_item_texts = ['Financial Perspective', 'Customer Perspective', 'Process Perspective', 'Innovation Perspective']
-        menu_items = [
-            {
-                "text": menu_item_text,
-                "viewclass": "OneLineListItem",
-                "on_release": lambda x=menu_item_text: self.menu_callback(x),
-            } for menu_item_text in menu_item_texts
-        ]
-        self.menu = MDDropdownMenu(
-            caller=self._main_frame.ids.perspective_combobox_button,
-            items=menu_items,
-            width_mult=4,
+        self._perspective_dropdown = create_dropdown_menu(
+            ['Financial Perspective',
+            'Customer Perspective',
+            'Process Perspective',
+            'Innovation Perspective']
+            , self.menu_callback,
+            self._main_frame.ids.perspective_dropdown_button
         )
         return self._main_frame
 
