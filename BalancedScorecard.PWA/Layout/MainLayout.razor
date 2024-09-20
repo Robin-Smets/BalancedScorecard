@@ -1,4 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@inject DataStoreService _dataStoreService
+@using MatBlazor
+@using BalancedScorecard.PWA.Services
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -6,6 +10,9 @@
 
     <main>
         <div class="top-row px-4">
+            <MatButton @onclick="UpdateDataStoreButtonOnClick">Update Data Store</MatButton>
+            <MatButton @onclick="UpdateDataStoreButtonOnClick">Load Data</MatButton>
+
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
         </div>
 
@@ -14,3 +21,15 @@
         </article>
     </main>
 </div>
+
+@code{
+    private async Task UpdateDataStoreButtonOnClick()
+    {
+        await _dataStoreService.UpdateDataStore();
+    }
+    private async Task LoadDataButtonOnClick()
+    {
+        await _dataStoreService.LoadData();
+    }
+}
+

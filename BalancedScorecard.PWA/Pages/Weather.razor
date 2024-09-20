@@ -24,9 +24,6 @@ else
         {
             var file_path = @"data.csv";
             var file_content = await Http.GetStringAsync("/test/");
-            // var result_string = await Http.GetStringAsync("/test/");
-            // Task.Run(() => File.WriteAllTextAsync(@"C:\Users\robin\source\repos\BalancedScorecard\TEMP\data.csv", result_string));
-            // await File.WriteAllTextAsync(@"C:\Users\robin\source\repos\BalancedScorecard\TEMP\data.csv", "result_string");
             await JS.InvokeVoidAsync("saveTextFile", file_path, file_content);
             message = "File generated.";
 

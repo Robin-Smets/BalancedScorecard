@@ -1,5 +1,8 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using MatBlazor
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
+        <MatPortalHost></MatPortalHost>
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
