@@ -1,0 +1,40 @@
+﻿@using Newtonsoft.Json.Linq
+@page "/test"
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<h3>Fetch Data from Python API</h3>
+
+@if (message == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p>@message</p>
+}
+
+@code {
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Call your Flask API running on localhost:5555
+        try
+        {
+            var file_path = @"data.csv";
+            var file_content = await Http.GetStringAsync("/test/");
+            // var result_string = await Http.GetStringAsync("/test/");
+            // Task.Run(() => File.WriteAllTextAsync(@"C:\Users\robin\source\repos\BalancedScorecard\TEMP\data.csv", result_string));
+            // await File.WriteAllTextAsync(@"C:\Users\robin\source\repos\BalancedScorecard\TEMP\data.csv", "result_string");
+            await JS.InvokeVoidAsync("saveTextFile", file_path, file_content);
+            message = "File generated.";
+
+ 
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+        }
+    }
+}
