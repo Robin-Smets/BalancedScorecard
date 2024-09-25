@@ -1,0 +1,122 @@
+﻿@using BalancedScorecard.Enums
+@using BalancedScorecard.Services
+@inherits LayoutComponentBase
+@inject IDataStoreService _dataStoreService
+@inject IPlotDrawer _plotDrawer
+@inject DialogService _dialogService
+@inject NavigationManager _navigationManager
+
+<RadzenComponents @rendermode="InteractiveServer" />
+
+<div id="layout_root">
+    <RadzenLayout>
+        <RadzenHeader>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="10">
+                <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                <RadzenButton Icon="dashboard" Text="Update Data Store" ButtonStyle="ButtonStyle.Base" Click="UpdateDataStoreButtonClick"/>
+                <RadzenButton Icon="dashboard" Text="Load Data" ButtonStyle="ButtonStyle.Base" Click="LoadDataButtonClick"/>
+                <RadzenButton Icon="dashboard" Text="Encrypt Data Store" ButtonStyle="ButtonStyle.Base" Click="EncryptDataStoreButtonClick" />
+                <RadzenButton Icon="dashboard" Text="Decrypt Data Store" ButtonStyle="ButtonStyle.Base" Click="DecryptDataStoreButtonClick" />
+            </RadzenStack>
+        </RadzenHeader>
+        <RadzenSidebar Responsive="false" Style="width: max-content">
+            <RadzenPanelMenu DisplayStyle="@(sidebarExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false">
+                <RadzenPanelMenuItem Text="Overview" Icon="dashboard" Path="" />
+                <RadzenPanelMenuItem Text="Finances" Icon="credit_card" Path="finances" />
+            </RadzenPanelMenu>
+        </RadzenSidebar>
+        <RadzenBody>
+            <div class="rz-p-4">
+                @Body
+            </div>
+        </RadzenBody>
+    </RadzenLayout>
+</div>
+
+@code {
+    private bool sidebarExpanded = true;
+    private string cryptoKey = "";
+
+    private async Task UpdateDataStoreButtonClick()
+    {
+        try
+        {
+            await _dataStoreService.UpdateDataStore();
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception.Message);
+            throw;
+        }
+
+    }
+
+    private async Task LoadDataButtonClick()
+    {
+        try
+        {
+            await _dataStoreService.LoadData();
+
+            var startIndexRoute = _navigationManager.BaseUri.Count();
+            var route = _navigationManager.Uri.Substring(startIndexRoute);
+            if (route == "finances")
+            {
+
+                Task.Run(() => _plotDrawer.DrawOrderVolumeBarPlot(this));
+                Task.Run(() => _plotDrawer.DrawOrderVolumePiePlots(this));
+            }
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception.Message);
+            throw;
+        }
+    }
+
+    private async Task EncryptDataStoreButtonClick()
+    {
+        var key = await ShowKeyDialog(CryptoAction.Encrypt);
+        Task.Run(() => _dataStoreService.EncryptDataStore(key));
+    }
+
+    private async Task DecryptDataStoreButtonClick()
+    {
+        var key = await ShowKeyDialog(CryptoAction.Decrypt);
+        Task.Run(() => _dataStoreService.DecryptDataStore(key));
+    }
+
+    private async Task<string> ShowKeyDialog(CryptoAction cryptoAction)
+    {
+        var dialogTitle = $"{cryptoAction.ToString()}tion Key";
+        var result = await _dialogService.OpenAsync(dialogTitle, ds =>
+        @<RadzenStack Gap="1.5rem">
+            
+            <RadzenStack Orientation="Orientation.Vertical">
+                <p>Please enter a Key</p>
+            <RadzenTextBox Change=@(args => ds.Close(args)) @bind-Value=@cryptoKey Style="width: 100%" aria-label="Default TextBox" />
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenButton Text="Ok" Click="() => ds.Close(cryptoKey)" Style="width: 80px;" />
+                    <RadzenButton Text="Cancel" Click="() => ds.Close(null)" ButtonStyle="ButtonStyle.Light" />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenStack>
+    );
+
+        if (!(result is null))
+        {
+            Console.WriteLine($"Selected encryption key: {cryptoKey}");
+            return cryptoKey;
+        }
+        else
+        {
+            return "";
+        }
+    }
+}
+
+
+
+
+
+
+

@@ -1,0 +1,31 @@
+﻿@page "/financial"
+@using System.Data
+<h3>Financial Perspective</h3>
+        <MatTabGroup>
+            <MatTab Label="Order Volume">
+                First Content
+                <div id="order-volume-bar-plot" width="100%" height="100%">
+
+                </div>
+            </MatTab>
+            <MatTab Label="Revenue">
+                Revenue
+            </MatTab>
+        </MatTabGroup>
+
+@code {
+    private DataTable _orderVolumeBarPlotDataSource;
+
+    protected async override Task OnInitializedAsync()
+    {
+        _orderVolumeBarPlotDataSource = new DataTable();
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        
+    }
+
+
+
+}

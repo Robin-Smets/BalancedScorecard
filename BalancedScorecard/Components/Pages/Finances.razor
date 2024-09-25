@@ -1,0 +1,94 @@
+﻿@page "/finances"
+
+@using BalancedScorecard.Events
+@using BalancedScorecard.Services
+@using System.Data
+@inject IDataStoreService _dataStoreService
+@inject IPlotDrawer _plotDrawer
+@inject IJSRuntime _jSRuntime
+@inject IEventMediator _eventMediator
+@inject IComponentService _componentService
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="5" class="rz-p-12">
+    <RadzenLabel Text="From: " Component="RadzenFromDatePicker" />
+    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@_dataStoreService.FromDateFilter Change="@(args => _dataStoreService.FromDateFilter = args)" Name="RadzenFromDatePicker" />
+    <RadzenLabel Text="Until: " Component="RadzenUntilDatePicker" />
+    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@_dataStoreService.UntilDateFilter Change="@(args => _dataStoreService.UntilDateFilter = args)" Name="RadzenUntilDatePicker" />
+</RadzenStack>
+
+<RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
+    <Tabs>
+        <RadzenTabsItem Text="Order Volume">
+            
+                <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
+
+                    <RadzenColumn>
+                        <RadzenCard Variant="Variant.Outlined">
+                            <div id="order_volume_bar_plot" width="100%" height="100%"/>
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                                <RadzenLabel Text="Time Unit:" Component="DropDownBindValue" />
+                                <RadzenDropDown @bind-Value=@SelectedTimeUnit Data=@timeUnits Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenColumn>
+
+                    <RadzenColumn>
+                        <RadzenCard Variant="Variant.Outlined">
+                            <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
+                                <RadzenColumn>
+                                    <div id="order-volume-customer-pie"/>
+                                </RadzenColumn>
+                                <RadzenColumn>
+                                    <div id="order-volume-product-pie" />
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
+                                <RadzenColumn>
+                                    <div id="order-volume-sales-person-pie" />
+                                </RadzenColumn>
+                                <RadzenColumn>
+                                    <div id="order-volume-territory-pie" />
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenCard>
+                    </RadzenColumn>
+
+                </RadzenRow>
+            
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+@code {
+    public string SelectedTimeUnit { get; set; }
+    private int selectedIndex = 0;
+    private IEnumerable<string> timeUnits;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _componentService.Components[typeof(Finances)] = this;
+            SelectedTimeUnit = "Month";
+
+            timeUnits = new List<string>()
+            {
+                "CW",
+                "Month",
+                "Quarter",
+                "Year"
+            };
+
+            _eventMediator.Subscribe<VisualStateChangedEvent>(async (eventArgs) =>
+            {
+                await InvokeAsync(StateHasChanged); // Aufruf im Dispatcher-Kontext
+            });
+
+            await _plotDrawer.DrawOrderVolumeBarPlot(this);
+            await _plotDrawer.DrawOrderVolumePiePlots(this);
+        }
+    }
+
+
+}

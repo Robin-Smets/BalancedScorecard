@@ -1,0 +1,71 @@
+﻿@inherits LayoutComponentBase
+@inject IJSRuntime _jsRuntime
+@inject DataStoreService _dataStoreService
+@using MatBlazor
+@using BalancedScorecard.PWA.Services
+@using System.Text.Json
+
+<div class="page">
+    <div class="sidebar">
+        <div class="nav-menu">
+            <MatThemeProvider Theme="@nav_button_theme">
+                <nav class="mat-nav">
+                    <!-- Dashboard Button -->
+                    <MatButton Link="" Icon="home" Class="nav-button">
+                        Dashboard
+                    </MatButton>
+
+                    <!-- Financial Perspective Button -->
+                    <MatButton Link="financial" Icon="attach_money" Class="nav-button">
+                        Finances
+                    </MatButton>
+
+                    <!-- Customer Perspective Button -->
+                    <MatButton Link="customer" Icon="group" Class="nav-button">
+                        Customers
+                    </MatButton>
+
+                    <!-- Internal Process Perspective Button -->
+                    <MatButton Link="internal-process" Icon="build" Class="nav-button">
+                        Processes
+                    </MatButton>
+
+                    <!-- Learning and Growth Perspective Button -->
+                    <MatButton Link="learning-growth" Icon="school" Class="nav-button">
+                        Learning & Growth
+                    </MatButton>
+                </nav>
+            </MatThemeProvider>
+        </div>
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <MatButton Icon="archived" @onclick="UpdateDataStoreButtonOnClick">Update Data Store</MatButton>
+            <MatButton Icon="cached" @onclick="LoadDataButtonOnClick">Load Data</MatButton>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+        <div id="plot" width="100vh" height="100vh"></div>
+    </main>
+</div>
+
+@code{
+    MatTheme nav_button_theme = new MatTheme()
+    {
+        Primary = "#f7f7f7",
+    };
+
+    private async Task UpdateDataStoreButtonOnClick()
+    {
+        await _dataStoreService.UpdateDataStore();
+    }
+
+    private async Task LoadDataButtonOnClick()
+    {
+        await _dataStoreService.LoadData();
+    }
+}
+
