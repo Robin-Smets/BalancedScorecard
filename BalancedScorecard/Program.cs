@@ -13,6 +13,9 @@ builder.Services.AddScoped<IDataStoreService, DataStoreService>();
 builder.Services.AddScoped<IPlotDrawer, PlotDrawer>();
 builder.Services.AddScoped<IEventMediator, EventMediator>();
 builder.Services.AddScoped<IComponentService, ComponentService>();
+builder.Services.AddScoped<IMLService, MLService>();
+builder.Services.AddScoped<ITerminalService, TerminalService>();
+builder.Services.AddScoped<ITransformer, Transformer>();
 
 var app = builder.Build();
 

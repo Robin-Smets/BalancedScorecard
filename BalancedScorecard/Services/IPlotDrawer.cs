@@ -6,5 +6,6 @@ namespace BalancedScorecard.Services
     {
         Task DrawOrderVolumeBarPlot(IComponent sender);
         Task DrawOrderVolumePiePlots(IComponent sender);
+        Task DrawHeatmapForOrderVolumeMatrix(IComponent sender);
     }
 }

@@ -2,5 +2,7 @@
 {
     public interface IMLService
     {
+        Task LoadData();
+        Task TrainModel();
     }
 }

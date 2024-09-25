@@ -1,0 +1,109 @@
+﻿@page "/administration"
+@using BalancedScorecard.Enums
+@using BalancedScorecard.Services
+@using BalancedScorecard.Components.Controls
+@inject IDataStoreService _dataStoreService
+@inject DialogService _dialogService
+@inject ITerminalService _terminalService
+
+<RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
+    <Tabs>
+        <RadzenTabsItem Text="Data Store Management">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10">
+                    <RadzenButton Icon="dashboard" Text="Update Data Store" ButtonStyle="ButtonStyle.Base" Click="UpdateDataStoreButtonClick" />
+                    <RadzenButton Icon="dashboard" Text="Encrypt Data Store" ButtonStyle="ButtonStyle.Base" Click="EncryptDataStoreButtonClick" />
+                    <RadzenButton Icon="dashboard" Text="Decrypt Data Store" ButtonStyle="ButtonStyle.Base" Click="DecryptDataStoreButtonClick" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Terminal">
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Default TextBox</RadzenText>
+                    <RadzenTextBox Change=@(args => OnChange(args)) Style="width: 100%" aria-label="Default TextBox" />
+                    <EventConsole @ref=@console />
+                </RadzenCard>
+                
+
+
+            </RadzenCard>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+@code {
+    string value;
+
+    EventConsole console;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _terminalService.Console = console;
+        }
+        
+    }
+
+    void OnChange(string value)
+    {
+        _terminalService.ExecuteCommand(value);
+    }
+    private int selectedIndex = 0;
+
+    private string cryptoKey = "";
+
+    private async Task UpdateDataStoreButtonClick()
+    {
+        try
+        {
+            await _dataStoreService.UpdateDataStore();
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception.Message);
+            throw;
+        }
+
+    }
+
+    private async Task EncryptDataStoreButtonClick()
+    {
+        var key = await ShowKeyDialog(CryptoAction.Encrypt);
+        Task.Run(() => _dataStoreService.EncryptDataStore(key));
+    }
+
+    private async Task DecryptDataStoreButtonClick()
+    {
+        var key = await ShowKeyDialog(CryptoAction.Decrypt);
+        Task.Run(() => _dataStoreService.DecryptDataStore(key));
+    }
+
+    private async Task<string> ShowKeyDialog(CryptoAction cryptoAction)
+    {
+        var dialogTitle = $"{cryptoAction.ToString()}tion Key";
+        var result = await _dialogService.OpenAsync(dialogTitle, ds =>
+    @<RadzenStack Gap="1.5rem">
+
+        <RadzenStack Orientation="Orientation.Vertical">
+            <p>Please enter a Key</p>
+            <RadzenTextBox Change=@(args => ds.Close(args)) @bind-Value=@cryptoKey Style="width: 100%" aria-label="Default TextBox" />
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenButton Text="Ok" Click="() => ds.Close(cryptoKey)" Style="width: 80px;" />
+                <RadzenButton Text="Cancel" Click="() => ds.Close(null)" ButtonStyle="ButtonStyle.Light" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenStack>);
+
+        if (!(result is null))
+        {
+            Console.WriteLine($"Selected encryption key: {cryptoKey}");
+            return cryptoKey;
+        }
+        else
+        {
+            return "";
+        }
+    }
+}

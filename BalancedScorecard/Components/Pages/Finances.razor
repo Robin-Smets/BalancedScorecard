@@ -20,41 +20,49 @@
     <Tabs>
         <RadzenTabsItem Text="Order Volume">
             
-                <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
+            <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
 
-                    <RadzenColumn>
-                        <RadzenCard Variant="Variant.Outlined">
-                            <div id="order_volume_bar_plot" width="100%" height="100%"/>
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
-                                <RadzenLabel Text="Time Unit:" Component="DropDownBindValue" />
-                                <RadzenDropDown @bind-Value=@SelectedTimeUnit Data=@timeUnits Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
-                            </RadzenStack>
-                        </RadzenCard>
-                    </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenCard Variant="Variant.Outlined">
+                        <div id="order_volume_bar_plot" width="100%" height="100%"/>
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                            <RadzenLabel Text="Time Unit:" Component="DropDownBindValue" />
+                            <RadzenDropDown @bind-Value=@SelectedTimeUnit Data=@timeUnits Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
 
-                    <RadzenColumn>
-                        <RadzenCard Variant="Variant.Outlined">
-                            <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
-                                <RadzenColumn>
-                                    <div id="order-volume-customer-pie"/>
-                                </RadzenColumn>
-                                <RadzenColumn>
-                                    <div id="order-volume-product-pie" />
-                                </RadzenColumn>
-                            </RadzenRow>
-                            <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
-                                <RadzenColumn>
-                                    <div id="order-volume-sales-person-pie" />
-                                </RadzenColumn>
-                                <RadzenColumn>
-                                    <div id="order-volume-territory-pie" />
-                                </RadzenColumn>
-                            </RadzenRow>
-                        </RadzenCard>
-                    </RadzenColumn>
+            </RadzenRow>
 
-                </RadzenRow>
-            
+            <RadzenRow class="rz-p-4 rz-w-100">
+                <RadzenColumn>
+                    <RadzenCard Variant="Variant.Outlined">
+                        <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
+                            <RadzenColumn class="rz-p-4 rz-w-50">
+                                <div id="order-volume-customer-pie"/>
+                            </RadzenColumn>
+                            <RadzenColumn class="rz-p-4 rz-w-50">
+                                <div id="order-volume-product-pie" />
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
+                            <RadzenColumn class="rz-p-4 rz-w-50">
+                                <div id="order-volume-sales-person-pie" />
+                            </RadzenColumn>
+                            <RadzenColumn class="rz-p-4 rz-w-50">
+                                <div id="order-volume-territory-pie" />
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow class="rz-p-4 rz-w-100 rz-pb-12">
+                <RadzenCard Variant="Variant.Outlined" class="rz-w-100 rz-pb-12" Style="aspect-ratio: 1 / 1;">
+                    <div id="order_volume_heat_map" style="width: 100%; aspect-ratio: 1 / 1;" />
+                </RadzenCard>
+            </RadzenRow>
+
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
@@ -87,6 +95,7 @@
 
             await _plotDrawer.DrawOrderVolumeBarPlot(this);
             await _plotDrawer.DrawOrderVolumePiePlots(this);
+            //await _plotDrawer.DrawCorrelationMatrix(this);
         }
     }
 
