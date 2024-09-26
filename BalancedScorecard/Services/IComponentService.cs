@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using BalancedScorecard.Enums;
+using Microsoft.AspNetCore.Components;
 
 namespace BalancedScorecard.Services
 {
     public interface IComponentService
     {
-        Dictionary<Type, IComponent> Components { get; }
+        IComponent RoutedPage { get; set; }
+        PageComponent GetRoutedPageEnum();
+        Task LoadDataButtonClick();
     }
 }

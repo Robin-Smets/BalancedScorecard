@@ -5,6 +5,7 @@
 @inject IDataStoreService _dataStoreService
 @inject DialogService _dialogService
 @inject ITerminalService _terminalService
+@inject IComponentService _componentService
 
 <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
     <Tabs>
@@ -36,6 +37,11 @@
     string value;
 
     EventConsole console;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _componentService.RoutedPage = this;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

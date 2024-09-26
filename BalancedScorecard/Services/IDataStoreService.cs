@@ -12,5 +12,7 @@ namespace BalancedScorecard.Services
         Task LoadData();
         Task EncryptDataStore(string key);
         Task DecryptDataStore(string key);
+
+        void EnsureDirectoryExistsAndHidden(string directoryPath);
     }
 }

@@ -5,6 +5,7 @@ using BalancedScorecard.Events;
 using System.Globalization;
 using System;
 using BalancedScorecard.Components.Pages;
+using BalancedScorecard.Enums;
 
 namespace BalancedScorecard.Services
 {
@@ -26,11 +27,18 @@ namespace BalancedScorecard.Services
             _transformer = transformer;
         }
 
+        public async Task DrawFinancesPlots()
+        {
+            Task.Run(() => DrawOrderVolumeBarPlot(_componentService.RoutedPage));
+            Task.Run(() => DrawOrderVolumePiePlots(_componentService.RoutedPage));
+            Task.Run(() => DrawHeatmapForOrderVolumeMatrix(_componentService.RoutedPage));
+        }
+
         public async Task DrawOrderVolumeBarPlot(IComponent sender)
         {
             var xValues = new List<string>();
             var yValues = new List<decimal>();
-            var financesComponent = _componentService.Components[typeof(Finances)] as Finances;
+            var financesComponent = _componentService.RoutedPage as Finances;
             var groupByColumn = "";
 
             switch (financesComponent.SelectedTimeUnit)

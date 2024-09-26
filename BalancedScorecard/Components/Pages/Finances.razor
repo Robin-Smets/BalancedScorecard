@@ -1,20 +1,17 @@
 ﻿@page "/finances"
 
+@using BalancedScorecard.Enums
 @using BalancedScorecard.Events
 @using BalancedScorecard.Services
 @using System.Data
+
 @inject IDataStoreService _dataStoreService
 @inject IPlotDrawer _plotDrawer
 @inject IJSRuntime _jSRuntime
 @inject IEventMediator _eventMediator
 @inject IComponentService _componentService
 
-<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="5" class="rz-p-12">
-    <RadzenLabel Text="From: " Component="RadzenFromDatePicker" />
-    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@_dataStoreService.FromDateFilter Change="@(args => _dataStoreService.FromDateFilter = args)" Name="RadzenFromDatePicker" />
-    <RadzenLabel Text="Until: " Component="RadzenUntilDatePicker" />
-    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@_dataStoreService.UntilDateFilter Change="@(args => _dataStoreService.UntilDateFilter = args)" Name="RadzenUntilDatePicker" />
-</RadzenStack>
+@implements IDisposable
 
 <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
     <Tabs>
@@ -72,12 +69,16 @@
     private int selectedIndex = 0;
     private IEnumerable<string> timeUnits;
 
+    protected override async Task OnInitializedAsync()
+    {
+        _componentService.RoutedPage = this;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _componentService.Components[typeof(Finances)] = this;
+
             SelectedTimeUnit = "Month";
 
             timeUnits = new List<string>()
@@ -99,5 +100,8 @@
         }
     }
 
-
+    public void Dispose()
+    {
+        Console.WriteLine("Disposing 'Finances' page component.");
+    }
 }

@@ -6,6 +6,8 @@ using System.Globalization;
 using System.Data.Odbc;
 using System.Text;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Components;
+using BalancedScorecard.Components.Pages;
 
 namespace BalancedScorecard.Services
 {
@@ -20,9 +22,13 @@ namespace BalancedScorecard.Services
         private string _connectionString;
         private bool _loadFromCsv;
         private bool _cacheDataStore;
+        private IComponentService _componentService;
+        //private IPlotDrawer _plotDrawer;
 
-        public DataStoreService() 
+        public DataStoreService(IComponentService componentService/*, IPlotDrawer plotDrawer*/) 
         {
+            //_plotDrawer = plotDrawer;
+            _componentService = componentService;
             FromDateFilter = DateTime.Now;
             UntilDateFilter = DateTime.Now;
             _dataStore = new DataSet();
@@ -44,6 +50,12 @@ namespace BalancedScorecard.Services
             if (_loadFromCsv)
             {
                 await LoadDataFromCsv();
+
+                if (_componentService.RoutedPage.GetType() == typeof(Finances))
+                {
+ 
+
+                }
             }
             else
             {
@@ -166,7 +178,7 @@ namespace BalancedScorecard.Services
         }
 
 
-        private void EnsureDirectoryExistsAndHidden(string directoryPath)
+        public void EnsureDirectoryExistsAndHidden(string directoryPath)
         {
             if (!Directory.Exists(directoryPath))
             {

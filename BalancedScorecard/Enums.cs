@@ -6,5 +6,12 @@
         Decrypt
     }
 
+    public enum PageComponent
+    {
+        Overview,
+        Administration,
+        Finances
+    }
+
 
 }

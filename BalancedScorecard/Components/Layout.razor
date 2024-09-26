@@ -1,8 +1,8 @@
-﻿@using BalancedScorecard.Enums
+﻿@using BalancedScorecard.Components.Pages
+@using BalancedScorecard.Enums
 @using BalancedScorecard.Services
 @inherits LayoutComponentBase
-@inject IDataStoreService _dataStoreService
-@inject IPlotDrawer _plotDrawer
+@inject IServiceProvider _services
 @inject DialogService _dialogService
 @inject NavigationManager _navigationManager
 
@@ -11,9 +11,26 @@
 <div id="layout_root">
     <RadzenLayout>
         <RadzenHeader>
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="10">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="120">
                 <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
-                <RadzenButton Icon="dashboard" Text="Load Data" ButtonStyle="ButtonStyle.Base" Click="LoadDataButtonClick"/>
+                @if(_services.GetRequiredService<IComponentService>().RoutedPage is not null)
+                {
+                    switch(_services.GetRequiredService<IComponentService>().GetRoutedPageEnum())
+                    {
+                        case (PageComponent.Finances):
+                            <RadzenRow Gap="20">
+                                <RadzenButton Icon="dashboard" Text="Load Data" ButtonStyle="ButtonStyle.Base" Click="@(() => _services.GetRequiredService<IComponentService>().LoadDataButtonClick())"/>
+                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="20" >
+                                    <RadzenLabel Text="From: " Component="RadzenFromDatePicker" />
+                                    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_services.GetRequiredService<IDataStoreService>().FromDateFilter) Change="@(args => _services.GetRequiredService<IDataStoreService>().FromDateFilter = args)" Name="RadzenFromDatePicker" />
+                                    <RadzenLabel Text="Until: " Component="RadzenUntilDatePicker" />
+                                    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_services.GetRequiredService<IDataStoreService>().UntilDateFilter) Change="@(args => _services.GetRequiredService<IDataStoreService>().UntilDateFilter = args)" Name="RadzenUntilDatePicker" />
+                                </RadzenStack>
+                            </RadzenRow>
+
+                            break;
+                    }
+                }
             </RadzenStack>
         </RadzenHeader>
         <RadzenSidebar Responsive="false" Style="width: max-content">
@@ -34,28 +51,7 @@
 @code {
     private bool sidebarExpanded = true;
 
-    private async Task LoadDataButtonClick()
-    {
-        try
-        {
-            await _dataStoreService.LoadData();
 
-            var startIndexRoute = _navigationManager.BaseUri.Count();
-            var route = _navigationManager.Uri.Substring(startIndexRoute);
-            if (route == "finances")
-            {
-
-                Task.Run(() => _plotDrawer.DrawOrderVolumeBarPlot(this));
-                Task.Run(() => _plotDrawer.DrawOrderVolumePiePlots(this));
-                Task.Run(() => _plotDrawer.DrawHeatmapForOrderVolumeMatrix(this));
-            }
-        }
-        catch (Exception exception)
-        {
-            Console.WriteLine(exception.Message);
-            throw;
-        }
-    }
 
 }
 
