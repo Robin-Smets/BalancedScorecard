@@ -7,6 +7,7 @@ namespace BalancedScorecard.Services
         DateTime? FromDateFilter { get; set; }
         DateTime? UntilDateFilter { get; set; }
         DataTableCollection DataTables { get; }
+        public string ConnectionString { get; }
 
         Task UpdateDataStore();
         Task LoadData();
@@ -14,5 +15,6 @@ namespace BalancedScorecard.Services
         Task DecryptDataStore(string key);
 
         void EnsureDirectoryExistsAndHidden(string directoryPath);
+        Dictionary<string, string> GetSqlFilesContent(string directoryPath);
     }
 }

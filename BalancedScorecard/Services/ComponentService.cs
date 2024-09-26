@@ -35,7 +35,7 @@ namespace BalancedScorecard.Services
 
         public async Task LoadDataButtonClick()
         {
-            await _services.GetRequiredService<IDataStoreService>().LoadData();
+            //await _services.GetRequiredService<IDataStoreService>().LoadData();
             await _services.GetRequiredService<IPlotDrawer>().DrawFinancesPlots();
         }
 

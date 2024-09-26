@@ -15,6 +15,7 @@ namespace BalancedScorecard.Services
     {
         public DateTime? FromDateFilter { get; set; }
         public DateTime? UntilDateFilter { get; set; }
+        public string ConnectionString => _connectionString;
         public DataTableCollection DataTables => _dataStore.Tables;
         private DataSet _dataStore;
         private string _localDataStorePath;
@@ -35,13 +36,23 @@ namespace BalancedScorecard.Services
             _localDataStorePath = "./DataStore/";
             _sqlScriptsPath = "./Sql/Tables/";
             _connectionString = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=AdventureWorks2022;UID=sa;PWD=@Sql42;TrustServerCertificate=yes;";
-            _loadFromCsv = true;
+            _loadFromCsv = false;
             _cacheDataStore = true;
+        }
+
+        public async Task ClearDataStore()
+        {
+            foreach (DataTable table in _dataStore.Tables)
+            {
+                table.Clear();
+            }
+            _dataStore.Tables.Clear();
+            _dataStore.Clear();
         }
 
         public async Task LoadData()
         {
-            _dataStore.Tables.Clear();
+            await ClearDataStore();
             FromDateFilter = FromDateFilter.Value.Date;
             UntilDateFilter = UntilDateFilter.Value.Date
                                                    .AddDays(1)
@@ -59,10 +70,52 @@ namespace BalancedScorecard.Services
             }
             else
             {
-                throw new NotImplementedException("LoadDataFromDb not implemented.");
+                await LoadDataFromDb();
             }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
 
         }
+
+        public async Task LoadDataFromDb()
+        {
+            EnsureDirectoryExistsAndHidden(_localDataStorePath);
+
+            // Hole die SQL-Skripte
+            var sqlScripts = GetSqlFilesContent(_sqlScriptsPath);
+
+            using (OdbcConnection connection = new OdbcConnection(_connectionString))
+            {
+                await connection.OpenAsync(); // Stelle sicher, dass die Verbindung geöffnet wird
+
+                // Schleife durch jedes SQL-Skript
+                foreach (var sqlScript in sqlScripts)
+                {
+
+                    using (OdbcCommand command = new OdbcCommand(sqlScript.Value, connection))
+                    {
+                        using (System.Data.Common.DbDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            // Erstelle eine neue DataTable
+                            DataTable dataTable = new DataTable();
+
+                            // Lade die Daten vom OdbcDataReader in die DataTable
+                            dataTable.Load(reader);
+
+                            // Optional: Gib der DataTable einen Namen basierend auf dem SQL-Skript oder einem Index
+                            dataTable.TableName = sqlScript.Key; // Verwende den Dateinamen als Tabellenname, falls `sqlScript.Key` der Dateiname ist.
+
+                            // Füge die DataTable dem DataSet (_dataStore) hinzu
+                            _dataStore.Tables.Add(dataTable);
+                        }
+                    }
+                }
+
+                connection.Close();
+            }
+        }
+
 
         public async Task LoadDataFromCsv()
         {
@@ -208,13 +261,16 @@ namespace BalancedScorecard.Services
             };
 
             using (var reader = new StreamReader(filePath))
-            using (var csv = new CsvReader(reader, config))
             {
-                using (var dr = new CsvDataReader(csv))
+                using (var csv = new CsvReader(reader, config))
                 {
-                    dataTable.Load(dr);         // Lädt die Daten in die DataTable
+                    using (var dr = new CsvDataReader(csv))
+                    {
+                        dataTable.Load(dr);         // Lädt die Daten in die DataTable
+                    }
                 }
             }
+
 
             return dataTable;
         }
@@ -279,7 +335,7 @@ namespace BalancedScorecard.Services
             }
         }
 
-        private Dictionary<string, string> GetSqlFilesContent(string directoryPath)
+        public Dictionary<string, string> GetSqlFilesContent(string directoryPath)
         {
             Dictionary<string, string> sqlFilesDictionary = new Dictionary<string, string>();
 
