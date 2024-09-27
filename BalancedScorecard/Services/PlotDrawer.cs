@@ -19,6 +19,7 @@ namespace BalancedScorecard.Services
         private IJSRuntime _jSRuntime;
         private IComponentService _componentService;
         private ITransformer _transformer;
+
         private KeyValuePair<string,string> _orderVolumeQuery => _dataStoreService.GetSqlFilesContent("./Sql/Tables/").First();
 
 
@@ -33,22 +34,31 @@ namespace BalancedScorecard.Services
 
         public async Task DrawFinancesPlots()
         {
-            var groupedBarPlotDataSource = await CreateGroupedDataSource(GetTimeUnitColumn(), _orderVolumeQuery);
+            // Starte alle Tasks parallel
+            var groupedBarPlotTask = CreateGroupedDataSource(GetTimeUnitColumn(), _orderVolumeQuery);
+            var customerPiePlotTask = CreateGroupedDataSource("CustomerID", _orderVolumeQuery, true, 10, true);
+            var productPiePlotTask = CreateGroupedDataSource("ProductID", _orderVolumeQuery, true, 10, true);
+            var salesPersonPiePlotTask = CreateGroupedDataSource("SalesPersonID", _orderVolumeQuery, true, 10, true);
+            var territoryPiePlotTask = CreateGroupedDataSource("TerritoryID", _orderVolumeQuery, true, 10, true);
+
+            // Warte auf alle Tasks gleichzeitig
+            await Task.WhenAll(groupedBarPlotTask, customerPiePlotTask, productPiePlotTask, salesPersonPiePlotTask, territoryPiePlotTask);
+
+            // Extrahiere die Ergebnisse aus den Tasks
+            var groupedBarPlotDataSource = await groupedBarPlotTask;
+            var customerPiePlotDataSource = await customerPiePlotTask;
+            var productPiePlotDataSource = await productPiePlotTask;
+            var salesPersonPiePlotDataSource = await salesPersonPiePlotTask;
+            var territoryPiePlotDataSource = await territoryPiePlotTask;
+
+            // Zeichne die Diagramme
             DrawOrderVolumeBarPlot(_componentService.RoutedPage, groupedBarPlotDataSource.Item1, groupedBarPlotDataSource.Item2);
-
-            var customerPiePlotDataSource = await CreateGroupedDataSource("CustomerID", _orderVolumeQuery, true, 10, true);
             DrawOrderVolumePiePlot(_componentService.RoutedPage, "CustomerID", "order-volume-customer-pie", customerPiePlotDataSource.Item1, customerPiePlotDataSource.Item2);
-
-            var productPiePlotDataSource = await CreateGroupedDataSource("ProductID", _orderVolumeQuery, true, 10, true);
             DrawOrderVolumePiePlot(_componentService.RoutedPage, "ProductID", "order-volume-product-pie", productPiePlotDataSource.Item1, productPiePlotDataSource.Item2);
-
-            var salesPersonPiePlotDataSource = await CreateGroupedDataSource("SalesPersonID", _orderVolumeQuery, true, 10, true);
             DrawOrderVolumePiePlot(_componentService.RoutedPage, "SalesPersonID", "order-volume-sales-person-pie", salesPersonPiePlotDataSource.Item1, salesPersonPiePlotDataSource.Item2);
-
-            var territoryPiePlotDataSource = await CreateGroupedDataSource("TerritoryID", _orderVolumeQuery, true, 10, true);
             DrawOrderVolumePiePlot(_componentService.RoutedPage, "TerritoryID", "order-volume-territory-pie", territoryPiePlotDataSource.Item1, territoryPiePlotDataSource.Item2);
-            //Task.Run(() => DrawHeatmapForOrderVolumeMatrix(_componentService.RoutedPage));
         }
+
 
         private async Task<(List<string>, List<decimal>)> CreateGroupedDataSource(string groupByColumn, KeyValuePair<string, string> sqlScript, bool ordered=false, int take=0, bool isIdColumn=false)
         {
@@ -159,72 +169,6 @@ namespace BalancedScorecard.Services
             return timeUnitColumn;
         }
 
-        //public async Task DrawOrderVolumeBarPlot(IComponent sender)
-        //{
-        //    var xValues = new List<string>();
-        //    var yValues = new List<decimal>();
-        //    var groupByColumn = GetTimeUnitColumn();
-        //    var orderVolumeGroups = new Dictionary<string, decimal>();
-
-
-        //    using (OdbcConnection connection = new OdbcConnection(_dataStoreService.ConnectionString))
-        //    {
-        //        await connection.OpenAsync();
-        //        var path = "./Sql/Tables/";
-        //        _dataStoreService.EnsureDirectoryExistsAndHidden(path.ToString());
-        //        var sqlScripts = _dataStoreService.GetSqlFilesContent(path);
-        //        foreach (var sqlScript in sqlScripts)
-        //        {
-        //            using (OdbcCommand command = new OdbcCommand(sqlScript.Value, connection))
-        //            using (DbDataReader reader = await command.ExecuteReaderAsync())
-        //            {
-        //                while (await reader.ReadAsync())
-        //                {
-        //                    var orderDate = CreateDateTimeFromString(reader["OrderDate"].ToString());
-        //                    if (orderDate.HasValue && orderDate.Value >= _dataStoreService.FromDateFilter && orderDate.Value <= _dataStoreService.UntilDateFilter)
-        //                    {
-        //                        var groupKey = reader[groupByColumn].ToString();
-        //                        var orderVolume = Convert.ToDecimal(reader["OrderVolume"]);
-
-        //                        if (orderVolumeGroups.ContainsKey(groupKey))
-        //                        {
-        //                            orderVolumeGroups[groupKey] += orderVolume;
-        //                        }
-        //                        else
-        //                        {
-        //                            orderVolumeGroups[groupKey] = orderVolume;
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //    }
-
-        //    foreach (var group in orderVolumeGroups)
-        //    {
-        //        xValues.Add(group.Key);
-        //        yValues.Add(group.Value);
-        //    }
-
-        //    var data = new[]
-        //    {
-        //        new
-        //        {
-        //            x = xValues.ToArray(),
-        //            y = yValues.ToArray(),
-        //            type = "bar"
-        //        }
-        //    };
-
-        //    var layout = new
-        //    {
-        //        title = "Order Volume Over Time"
-        //    };
-
-        //    await _jSRuntime.InvokeVoidAsync("createPlot", "order_volume_bar_plot", data, layout);
-        //    _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(sender));
-        //}
 
         public async Task DrawOrderVolumeBarPlot(IComponent sender, List<string> xValues, List<decimal> yValues)
         {
@@ -246,114 +190,6 @@ namespace BalancedScorecard.Services
             await _jSRuntime.InvokeVoidAsync("createPlot", "order_volume_bar_plot", data, layout);
             _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(sender));
         }
-
-
-        //    public async Task DrawOrderVolumePiePlots(IComponent sender)
-        //{
-        //    await DrawOrderVolumePiePlot(sender, "CustomerID", "order-volume-customer-pie");
-        //    await DrawOrderVolumePiePlot(sender, "ProductID", "order-volume-product-pie");
-        //    await DrawOrderVolumePiePlot(sender, "SalesPersonID", "order-volume-sales-person-pie");
-        //    await DrawOrderVolumePiePlot(sender, "TerritoryID", "order-volume-territory-pie");
-        //}
-
-        //public async Task DrawOrderVolumePiePlot(IComponent sender, string groupByColumn, string plotId)
-        //{
-        //    var xValues = new List<string>();
-        //    var yValues = new List<decimal>();
-
-        //    var orderVolumeGroups = new Dictionary<string, decimal>();
-        //    var groupNames = new Dictionary<string, string>();
-
-
-        //    using (OdbcConnection connection = new OdbcConnection(_dataStoreService.ConnectionString))
-        //    {
-        //        await connection.OpenAsync();
-        //        var path = "./Sql/Tables/";
-        //        _dataStoreService.EnsureDirectoryExistsAndHidden(path.ToString());
-        //        var sqlScripts = _dataStoreService.GetSqlFilesContent(path);
-        //        foreach (var sqlScript in sqlScripts)
-        //        {
-        //            using (OdbcCommand command = new OdbcCommand(sqlScript.Value, connection))
-        //            using (DbDataReader reader = await command.ExecuteReaderAsync())
-        //            {
-        //                while (await reader.ReadAsync())
-        //                {
-        //                    var orderDate = CreateDateTimeFromString(reader["OrderDate"].ToString());
-        //                    if (orderDate.HasValue && orderDate.Value >= _dataStoreService.FromDateFilter && orderDate.Value <= _dataStoreService.UntilDateFilter)
-        //                    {
-        //                        var groupKey = reader[groupByColumn].ToString();
-        //                        var orderVolumePercentage = Convert.ToDecimal(reader["OrderVolumePercentage"]);
-
-        //                        if (orderVolumeGroups.ContainsKey(groupKey))
-        //                        {
-        //                            orderVolumeGroups[groupKey] += orderVolumePercentage;
-        //                            groupNames[groupKey] = reader[groupByColumn.Replace("ID", "Name")].ToString();
-        //                        }
-        //                        else
-        //                        {
-        //                            orderVolumeGroups[groupKey] = orderVolumePercentage;
-        //                            groupNames[groupKey] = reader[groupByColumn.Replace("ID", "Name")].ToString();
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //    }
-
-        //    foreach (var group in orderVolumeGroups.OrderByDescending(group => group.Value).Take(10))
-        //    {
-
-        //        xValues.Add(groupNames[group.Key]);
-        //        yValues.Add(group.Value);
-        //    }
-        //    //if (_dataStoreService.DataTables["OrderVolume"] is not null)
-        //    //{
-        //    //    var orderVolumeData = _dataStoreService.DataTables["OrderVolume"]
-        //    //        .AsEnumerable()
-        //    //        .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()).Value >= _dataStoreService.FromDateFilter)
-        //    //        .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()).Value <= _dataStoreService.UntilDateFilter)
-        //    //        .GroupBy(row => row[groupByColumn].ToString())  // Gruppierung nach Spalte
-        //    //        .Select(group => new
-        //    //        {
-        //    //            GroupKey = group.Key,
-        //    //            GroupData = group,
-        //    //            TotalOrderVolumePercentage = group.Sum(x => Convert.ToDecimal(x["OrderVolumePercentage"])) // Berechnung der Summe für jede Gruppe
-        //    //        })
-        //    //        .OrderByDescending(group => group.TotalOrderVolumePercentage)  // Sortierung in absteigender Reihenfolge
-        //    //        .Take(10);
-
-        //    //    foreach (var group in orderVolumeData)
-        //    //    {
-        //    //        var totalOrderVolume = group.GroupData.Sum(row => Convert.ToDecimal(row["OrderVolume"]));
-
-        //    //        var groupKeyNameColumn = groupByColumn.Replace("ID", "Name");
-        //    //        var firstMatchingRow = group.GroupData.First(x => x[groupByColumn].ToString() == group.GroupKey);
-        //    //        var groupKeyName = firstMatchingRow[groupKeyNameColumn].ToString();
-
-        //    //        xValues.Add(groupKeyName);
-        //    //        yValues.Add(totalOrderVolume);
-        //    //    }
-        //    //}
-
-        //    var data = new[]
-        //    {
-        //        new
-        //        {
-        //            labels = xValues.ToArray(),
-        //            values = yValues.ToArray(),
-        //            type = "pie"
-        //        }
-        //    };
-
-        //    var layout = new
-        //    {
-        //        title = $"Order Volume Over {groupByColumn.Replace("ID", "")}"
-        //    };
-
-        //    await _jSRuntime.InvokeVoidAsync("createPlot", plotId, data, layout);
-        //    _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(sender));
-        //}
 
         public async Task DrawOrderVolumePiePlot(IComponent sender, string groupByColumn, string plotId, List<string> xValues, List<decimal> yValues)
         {
