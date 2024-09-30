@@ -1,0 +1,37 @@
+﻿@using BalancedScorecard.Enums
+@using BalancedScorecard.Events
+@using BalancedScorecard.Services
+
+@inject IServiceProvider _services
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="120">
+    <RadzenSidebarToggle Click="@OnSidebarToggleButtonClick" />
+    @if (_componentService.RoutedPage is not null)
+    {
+        switch (_services.GetRequiredService<IComponentService>().GetRoutedPageEnum())
+        {
+            case (PageComponent.Finances):
+                <RadzenRow Gap="20">
+                    <RadzenButton Icon="dashboard" Text="Load Data" ButtonStyle="ButtonStyle.Base" Click="@(() => _services.GetRequiredService<IComponentService>().LoadDataButtonClick())" />
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="20">
+                        <RadzenLabel Text="From: " Component="RadzenFromDatePicker" />
+                        <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_services.GetRequiredService<IDataStoreService>().FromDateFilter) Change="@(args => _services.GetRequiredService<IDataStoreService>().FromDateFilter = args)" Name="RadzenFromDatePicker" />
+                        <RadzenLabel Text="Until: " Component="RadzenUntilDatePicker" />
+                        <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_services.GetRequiredService<IDataStoreService>().UntilDateFilter) Change="@(args => _services.GetRequiredService<IDataStoreService>().UntilDateFilter = args)" Name="RadzenUntilDatePicker" />
+                    </RadzenStack>
+                </RadzenRow>
+            break;
+        }
+    }
+</RadzenStack>
+
+@code {
+    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
+    private IDataStoreService _datastoreService => _services.GetRequiredService<IDataStoreService>();
+    private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
+
+    private void OnSidebarToggleButtonClick()
+    {
+        _eventMediator.Publish<ButtonClickEvent>(new ButtonClickEvent(RaisingButton.SidebarToggleButton));
+    }
+}

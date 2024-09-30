@@ -1,0 +1,55 @@
+﻿@* Sidebar.razor *@
+
+@using BalancedScorecard.Enums
+@using BalancedScorecard.Events
+@using BalancedScorecard.Services
+
+@* @implements IDisposable *@
+
+@inject IServiceProvider _services
+
+<RadzenPanelMenu DisplayStyle="@(isExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false">
+    <RadzenPanelMenuItem Text="Overview" Icon="dashboard" Path="" />
+    <RadzenPanelMenuItem Text="Finances" Icon="credit_card" Path="finances" />
+    <RadzenPanelMenuItem Text="Administration" Icon="admin_panel_settings" Path="administration" />
+</RadzenPanelMenu>
+
+@code 
+{
+    private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
+
+    private bool isExpanded;  
+
+    protected async override Task OnInitializedAsync()
+    {
+        isExpanded = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _eventMediator.Subscribe<ButtonClickEvent>(async (eventArgs) =>
+            {
+                OnSidebarToggleButtonClick(eventArgs);
+                await InvokeAsync(StateHasChanged); // Aufruf im Dispatcher-Kontext
+            });
+        }
+    }
+
+    private void OnSidebarToggleButtonClick(ButtonClickEvent args)
+    {
+        if (args.Button == RaisingButton.SidebarToggleButton)
+        {
+            isExpanded = !isExpanded;
+        }
+    }
+
+    // public void Dispose()
+    // {
+    //     _eventMediator.Unsubscribe<ButtonClickEvent>((eventArgs) =>
+    //     {
+    //         OnSidebarToggleButtonClick(eventArgs);
+    //     });
+    // }
+}

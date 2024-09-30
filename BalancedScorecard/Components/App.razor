@@ -1,21 +1,26 @@
-﻿<!DOCTYPE html>
+﻿@* App.razor *@
+
+@inject DialogService _dialogService
+
+<!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
-    <link rel="stylesheet" href="css/app.css" />
-    <HeadOutlet @rendermode="InteractiveServer" />
-    <RadzenTheme Theme="material" @rendermode="InteractiveServer" />
-</head>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <base href="/" />
+        <link rel="stylesheet" href="css/app.css" />
+        <HeadOutlet @rendermode="InteractiveServer" />
+        <RadzenTheme Theme="material" @rendermode="InteractiveServer" />
+    </head>
 
-<body>
-    <Routes @rendermode="InteractiveServer" />
-    <script src="_framework/blazor.web.js"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="js/app.js"></script>
-</body>
+    <body>
+        <Routes @rendermode="InteractiveServer" />
+        <RadzenComponents @rendermode="InteractiveServer" />
+        <script src="_framework/blazor.web.js"></script>
+        <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="js/app.js"></script>
+    </body>
 
 </html>

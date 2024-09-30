@@ -19,5 +19,12 @@
         Finances
     }
 
+    /// <summary>
+    /// Button that raises an OnButtonClick event.
+    /// </summary>
+    public enum RaisingButton
+    {
+        SidebarToggleButton
+    }
 
 }
