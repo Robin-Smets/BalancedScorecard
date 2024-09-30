@@ -1,6 +1,8 @@
+// Program.cs
+
+using Radzen;
 using BalancedScorecard.Components;
 using BalancedScorecard.Services;
-using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 

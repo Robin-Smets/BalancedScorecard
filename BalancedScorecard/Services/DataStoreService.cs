@@ -16,6 +16,10 @@ namespace BalancedScorecard.Services
         public DateTime? FromDateFilter { get; set; }
         public DateTime? UntilDateFilter { get; set; }
         public DataTableCollection DataTables => _dataStore.Tables;
+
+        /// <summary>
+        /// 
+        /// </summary>
         private DataSet _dataStore;
         private string _localDataStorePath;
         private string _sqlScriptsPath;
