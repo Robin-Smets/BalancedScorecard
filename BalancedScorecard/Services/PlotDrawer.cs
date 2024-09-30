@@ -11,20 +11,19 @@ namespace BalancedScorecard.Services
 {
     public class PlotDrawer : IPlotDrawer
     {
-        private IDataStoreService _dataStoreService;
-        private IEventMediator _eventMediator;
         private IJSRuntime _jSRuntime;
-        private IComponentService _componentService;
-        private ITransformer _transformer;
+
+        private readonly IServiceProvider _services;
+        private IDataStoreService _dataStoreService => _services.GetRequiredService<IDataStoreService>();
+        private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
+        private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
+        private ITransformer _transformer => _services.GetRequiredService<ITransformer>();
         
 
-        public PlotDrawer(IDataStoreService dataStoreService, IJSRuntime jSRuntime, IEventMediator eventMediator, IComponentService componentService, ITransformer transformer)
+        public PlotDrawer(IServiceProvider services, IJSRuntime jSRuntime)
         {
-            _dataStoreService = dataStoreService;
             _jSRuntime = jSRuntime;
-            _eventMediator = eventMediator;
-            _componentService = componentService;
-            _transformer = transformer;
+            _services = services;
         }
 
         public async Task DrawFinancesPlots()

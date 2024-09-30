@@ -22,13 +22,12 @@ namespace BalancedScorecard.Services
         private string _connectionString;
         private bool _loadFromCsv;
         private bool _cacheDataStore;
-        private IComponentService _componentService;
-        //private IPlotDrawer _plotDrawer;
+        private readonly IServiceProvider _services;
+        private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
 
-        public DataStoreService(IComponentService componentService/*, IPlotDrawer plotDrawer*/) 
+        public DataStoreService(IServiceProvider services) 
         {
-            //_plotDrawer = plotDrawer;
-            _componentService = componentService;
+            _services = services;
             FromDateFilter = DateTime.Now;
             UntilDateFilter = DateTime.Now;
             _dataStore = new DataSet();

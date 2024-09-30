@@ -8,41 +8,43 @@ namespace BalancedScorecard.Services
     public class TerminalService : ITerminalService
     {
         public EventConsole? Console { get; set; }
-        private IMLService _mLService;
+
+        private readonly IServiceProvider _services;
+        private IMLService _mLService => _services.GetRequiredService<IMLService>();
         
-        public TerminalService(IMLService mLService) 
+        public TerminalService(IServiceProvider services) 
         { 
-            _mLService = mLService;
+            _services = services;
         }
 
         public async Task ExecuteCommand(string command)
         {
             Console.Log($"Command: {command}");
-            if (command.StartsWith("ml train optimized model "))
-            {
-                var commandSuffix = command.Replace("ml train optimized model ", "");
+            //if (command.StartsWith("ml train optimized model "))
+            //{
+            //    var commandSuffix = command.Replace("ml train optimized model ", "");
 
-                try
-                {
-                    if (commandSuffix != "" && uint.Parse(commandSuffix) is uint seconds)
-                    {
-                        await _mLService.TrainModelWithAutoOptimizationAsync(seconds);
-                    }
-                    else
-                    {
-                        Console.Log($"Not a valid command");
-                        return;
-                    }
-                }
-                catch (Exception)
-                {
-                    Console.Log($"Not a valid command");
-                    return;
-                }
+            //    try
+            //    {
+            //        if (commandSuffix != "" && uint.Parse(commandSuffix) is uint seconds)
+            //        {
+            //            await _mLService.TrainModelWithAutoOptimizationAsync(seconds);
+            //        }
+            //        else
+            //        {
+            //            Console.Log($"Not a valid command");
+            //            return;
+            //        }
+            //    }
+            //    catch (Exception)
+            //    {
+            //        Console.Log($"Not a valid command");
+            //        return;
+            //    }
 
-            }
-            else
-            {
+            //}
+            //else
+            //{
                 switch (command)
                 {
                     case "ml load data":
@@ -68,7 +70,7 @@ namespace BalancedScorecard.Services
                     default:
                         Console.Log($"Not a valid command");
                         return;
-                }
+                //}
             }
 
             Console.Log("Command executed");

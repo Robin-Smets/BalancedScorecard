@@ -4,11 +4,12 @@ namespace BalancedScorecard.Services
 {
     public class Transformer : ITransformer
     {
-        private readonly IDataStoreService _dataStoreService;
+        private readonly IServiceProvider _services;
+        private IDataStoreService _dataStoreService => _services.GetRequiredService<IDataStoreService>();
 
-        public Transformer(IDataStoreService dataStoreService) 
+        public Transformer(IServiceProvider services) 
         { 
-            _dataStoreService = dataStoreService;
+            _services = services;
         }
 
         public List<string> GetTopTenIDs(string featureColumn)

@@ -9,7 +9,8 @@ namespace BalancedScorecard.Services
         public IDataView TestData { get; }
         Task LoadData();
         Task TrainModel();
-        Task TrainModelWithAutoOptimizationAsync(uint seconds);
         Task CheckMissingValuesInAllColumns(IDataView data);
+        // BUG: Does not recognize label column
+        //Task TrainModelWithAutoOptimizationAsync(uint seconds);
     }
 }

@@ -5,10 +5,8 @@ using Radzen;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddRadzenComponents();
-
 builder.Services.AddScoped<IDataStoreService, DataStoreService>();
 builder.Services.AddScoped<IPlotDrawer, PlotDrawer>();
 builder.Services.AddScoped<IEventMediator, EventMediator>();

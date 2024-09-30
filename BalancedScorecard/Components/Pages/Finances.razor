@@ -1,15 +1,13 @@
 ﻿@page "/finances"
 
+@using System.Data
 @using BalancedScorecard.Enums
 @using BalancedScorecard.Events
 @using BalancedScorecard.Services
-@using System.Data
 
-@inject IDataStoreService _dataStoreService
-@inject IPlotDrawer _plotDrawer
 @inject IJSRuntime _jSRuntime
-@inject IEventMediator _eventMediator
-@inject IComponentService _componentService
+
+@inject IServiceProvider _services
 
 @implements IDisposable
 
@@ -66,6 +64,11 @@
 
 @code {
     public string SelectedTimeUnit { get; set; }
+
+    private IPlotDrawer _plotDrawer => _services.GetRequiredService<IPlotDrawer>();
+    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
+    private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
+
     private int selectedIndex = 0;
     private IEnumerable<string> timeUnits;
 

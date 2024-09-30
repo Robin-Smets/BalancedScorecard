@@ -1,11 +1,12 @@
 ﻿@page "/administration"
+
 @using BalancedScorecard.Enums
 @using BalancedScorecard.Services
 @using BalancedScorecard.Components.Controls
-@inject IDataStoreService _dataStoreService
+
 @inject DialogService _dialogService
-@inject ITerminalService _terminalService
-@inject IComponentService _componentService
+
+@inject IServiceProvider _services
 
 <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
     <Tabs>
@@ -23,7 +24,7 @@
                 <RadzenCard>
                     <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Default TextBox</RadzenText>
                     <RadzenTextBox Change=@(args => OnChange(args)) Style="width: 100%" aria-label="Default TextBox" />
-                    <EventConsole @ref=@console />
+                    <EventConsole @ref=@_console />
                 </RadzenCard>
                 
 
@@ -33,10 +34,17 @@
     </Tabs>
 </RadzenTabs>
 
-@code {
-    string value;
+@code 
+{
+    private EventConsole _console;
 
-    EventConsole console;
+    private IDataStoreService _dataStoreService => _services.GetRequiredService<IDataStoreService>();
+    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
+    private ITerminalService _terminalService => _services.GetRequiredService<ITerminalService>();
+
+    private string value;
+
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -47,7 +55,7 @@
     {
         if (firstRender)
         {
-            _terminalService.Console = console;
+            _terminalService.Console = _console;
         }
         
     }

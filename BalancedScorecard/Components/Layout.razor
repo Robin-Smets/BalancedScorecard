@@ -13,7 +13,7 @@
         <RadzenHeader>
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="120">
                 <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
-                @if(_services.GetRequiredService<IComponentService>().RoutedPage is not null)
+                @if (_componentService.RoutedPage is not null)
                 {
                     switch(_services.GetRequiredService<IComponentService>().GetRoutedPageEnum())
                     {
@@ -48,11 +48,10 @@
     </RadzenLayout>
 </div>
 
-@code {
+@code 
+{
+    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
     private bool sidebarExpanded = true;
-
-
-
 }
 
 

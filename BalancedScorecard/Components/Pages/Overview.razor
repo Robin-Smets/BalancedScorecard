@@ -1,14 +1,17 @@
 ﻿@page "/"
-
+@using BalancedScorecard.Components.Pages
 @using BalancedScorecard.Enums
 @using BalancedScorecard.Services
 
-@inject IComponentService _componentService
+
+@inject IServiceProvider _services
 
 <h3>Overview</h3>
 <p>This will be a dashboard with summarized information, history, quick start links or something like that.</p>
 
 @code {
+    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
+
     protected override async Task OnInitializedAsync()
     {
         _componentService.RoutedPage = this;

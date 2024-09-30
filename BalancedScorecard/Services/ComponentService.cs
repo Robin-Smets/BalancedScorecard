@@ -8,6 +8,15 @@ namespace BalancedScorecard.Services
     {
         public IComponent RoutedPage { get; set; }
 
+        private readonly IServiceProvider _services;
+        private IDataStoreService _dataStoreService => _services.GetRequiredService<IDataStoreService>();
+        private IPlotDrawer _plotDrawer => _services.GetRequiredService<IPlotDrawer>();
+
+        public ComponentService(IServiceProvider services)
+        {
+            _services = services;
+        }
+
         public PageComponent GetRoutedPageEnum()
         {
             if (RoutedPage is Overview)
@@ -26,19 +35,10 @@ namespace BalancedScorecard.Services
             throw new NotImplementedException($"There is no 'PageComponent' enum for {RoutedPage.GetType().Name}");
         }
 
-        private readonly IServiceProvider _services;
-
-        public ComponentService(IServiceProvider services)
-        {
-            _services = services;
-        }
-
         public async Task LoadDataButtonClick()
         {
-            await _services.GetRequiredService<IDataStoreService>().LoadData();
-            await _services.GetRequiredService<IPlotDrawer>().DrawFinancesPlots();
+            await _dataStoreService.LoadData();
+            await _plotDrawer.DrawFinancesPlots();
         }
-
-
     }
 }
