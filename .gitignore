@@ -399,3 +399,6 @@ FodyWeavers.xsd
 
 # Python
 env/
+
+# Docker
+*.tar
