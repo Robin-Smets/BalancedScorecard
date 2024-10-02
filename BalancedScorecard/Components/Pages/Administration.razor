@@ -1,6 +1,7 @@
 ﻿@page "/administration"
 
 @using BalancedScorecard.Enums
+@using BalancedScorecard.Events
 @using BalancedScorecard.Services
 @using BalancedScorecard.Components.Controls
 
@@ -10,15 +11,6 @@
 
 <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
     <Tabs>
-        <RadzenTabsItem Text="Data Store Management">
-            <RadzenCard Variant="Variant.Outlined">
-                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10">
-                    <RadzenButton Icon="dashboard" Text="Update Data Store" ButtonStyle="ButtonStyle.Base" Click="UpdateDataStoreButtonClick" />
-                    <RadzenButton Icon="dashboard" Text="Encrypt Data Store" ButtonStyle="ButtonStyle.Base" Click="EncryptDataStoreButtonClick" />
-                    <RadzenButton Icon="dashboard" Text="Decrypt Data Store" ButtonStyle="ButtonStyle.Base" Click="DecryptDataStoreButtonClick" />
-                </RadzenStack>
-            </RadzenCard>
-        </RadzenTabsItem>
         <RadzenTabsItem Text="Terminal">
             <RadzenCard Variant="Variant.Outlined">
                 <RadzenCard>
@@ -26,9 +18,6 @@
                     <RadzenTextBox Change=@(args => OnChange(args)) Style="width: 100%" aria-label="Default TextBox" />
                     <EventConsole @ref=@_console />
                 </RadzenCard>
-                
-
-
             </RadzenCard>
         </RadzenTabsItem>
     </Tabs>
@@ -39,16 +28,15 @@
     private EventConsole _console;
 
     private IDataStoreService _dataStoreService => _services.GetRequiredService<IDataStoreService>();
-    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
     private ITerminalService _terminalService => _services.GetRequiredService<ITerminalService>();
+    private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
+    private IAppState _appState => _services.GetRequiredService<IAppState>();
 
     private string value;
 
-    
-
     protected override async Task OnInitializedAsync()
     {
-        _componentService.RoutedPage = this;
+        _appState.RoutedPage = this;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -57,6 +45,8 @@
         {
             _terminalService.Console = _console;
         }
+
+        _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(this));
         
     }
 
@@ -80,18 +70,6 @@
             throw;
         }
 
-    }
-
-    private async Task EncryptDataStoreButtonClick()
-    {
-        var key = await ShowKeyDialog(CryptoAction.Encrypt);
-        Task.Run(() => _dataStoreService.EncryptDataStore(key));
-    }
-
-    private async Task DecryptDataStoreButtonClick()
-    {
-        var key = await ShowKeyDialog(CryptoAction.Decrypt);
-        Task.Run(() => _dataStoreService.DecryptDataStore(key));
     }
 
     private async Task<string> ShowKeyDialog(CryptoAction cryptoAction)

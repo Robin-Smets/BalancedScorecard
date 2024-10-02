@@ -24,7 +24,7 @@
     /// </summary>
     public enum RaisingButton
     {
-        SidebarToggleButton
+        SidebarToggleButton,
+        LoadDataButton
     }
-
 }

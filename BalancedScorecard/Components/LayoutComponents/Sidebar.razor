@@ -4,8 +4,6 @@
 @using BalancedScorecard.Events
 @using BalancedScorecard.Services
 
-@* @implements IDisposable *@
-
 @inject IServiceProvider _services
 
 <RadzenPanelMenu DisplayStyle="@(isExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false">
@@ -32,7 +30,7 @@
             _eventMediator.Subscribe<ButtonClickEvent>(async (eventArgs) =>
             {
                 OnSidebarToggleButtonClick(eventArgs);
-                await InvokeAsync(StateHasChanged); // Aufruf im Dispatcher-Kontext
+                await InvokeAsync(StateHasChanged);
             });
         }
     }
@@ -44,12 +42,4 @@
             isExpanded = !isExpanded;
         }
     }
-
-    // public void Dispose()
-    // {
-    //     _eventMediator.Unsubscribe<ButtonClickEvent>((eventArgs) =>
-    //     {
-    //         OnSidebarToggleButtonClick(eventArgs);
-    //     });
-    // }
 }

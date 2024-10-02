@@ -4,6 +4,7 @@
 
 @using BalancedScorecard.Components.Pages
 @using BalancedScorecard.Enums
+@using BalancedScorecard.Events
 @using BalancedScorecard.Services
 
 
@@ -13,10 +14,23 @@
 <p>This will be a dashboard with summarized information, history, quick start links or something like that.</p>
 
 @code {
-    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
+    private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
+    private IAppState _appState => _services.GetRequiredService<IAppState>();
 
     protected override async Task OnInitializedAsync()
     {
-        _componentService.RoutedPage = this;
+        _appState.RoutedPage = this;
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+        }
+
+        _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(this));
+
+    }
+
 }

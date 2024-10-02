@@ -1,6 +1,8 @@
-﻿@* App.razor *@
+﻿@using BalancedScorecard.Services
+@* App.razor *@
 
 @inject DialogService _dialogService
+@* @inject IServiceProvider _services *@
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,3 +26,13 @@
     </body>
 
 </html>
+
+@code
+{
+    // private IDataStoreService _datastoreService => _services.GetRequiredService<IDataStoreService>();
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     _datastoreService.UpdateDataStore();
+    // }
+}

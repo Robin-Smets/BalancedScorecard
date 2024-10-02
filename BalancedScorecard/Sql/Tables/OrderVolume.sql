@@ -19,14 +19,22 @@ SELECT
 	CONCAT(DATEPART(QUARTER, OrderTable.OrderDate), '/', DATEPART(YEAR, OrderTable.OrderDate)) AS TimeUnitQuarter, 
 	OrderTable.OrderDate,
 	OrderTable.SalesOrderID,
+
 	OrderTable.CustomerID,
 	COALESCE(Person.FirstName + ' ' + Person.LastName, Store.Name) AS CustomerName,
+	CONCAT(OrderTable.CustomerID, '#', COALESCE(Person.FirstName + ' ' + Person.LastName, Store.Name)) AS Customer,
+
 	OrderTable.TerritoryID,
 	SalesTerritory.Name AS TerritoryName,
+	CONCAT(OrderTable.TerritoryID, '#', SalesTerritory.Name) AS Territory,
+
 	OrderTable.SalesPersonID,
 	PersonSales.FirstName + ' ' + PersonSales.LastName AS SalesPersonName,
+    CONCAT(OrderTable.SalesPersonID, '#', PersonSales.FirstName + ' ' + PersonSales.LastName) AS SalesPerson,
+
 	Product.ProductID,
 	Product.Name AS ProductName,
+    CONCAT(Product.ProductID, '#', Product.Name) AS Product,
 
     -- Calculate proportional Freight and TaxAmt for each line item
     OrderDetail.LineTotal + 

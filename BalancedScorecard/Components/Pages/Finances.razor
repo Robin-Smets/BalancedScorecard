@@ -4,12 +4,11 @@
 @using BalancedScorecard.Enums
 @using BalancedScorecard.Events
 @using BalancedScorecard.Services
+@using static BalancedScorecard.Extensions
 
 @inject IJSRuntime _jSRuntime
 
 @inject IServiceProvider _services
-
-@implements IDisposable
 
 <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
     <Tabs>
@@ -66,15 +65,16 @@
     public string SelectedTimeUnit { get; set; }
 
     private IPlotDrawer _plotDrawer => _services.GetRequiredService<IPlotDrawer>();
-    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
     private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
+    private IDataStoreService _datastoreService => _services.GetRequiredService<IDataStoreService>();
+    private IAppState _appState => _services.GetRequiredService<IAppState>();
 
     private int selectedIndex = 0;
     private IEnumerable<string> timeUnits;
 
     protected override async Task OnInitializedAsync()
     {
-        _componentService.RoutedPage = this;
+        _appState.RoutedPage = this;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -97,14 +97,67 @@
                 await InvokeAsync(StateHasChanged); // Aufruf im Dispatcher-Kontext
             });
 
-            await _plotDrawer.DrawOrderVolumeBarPlot(this);
-            await _plotDrawer.DrawOrderVolumePiePlots(this);
-            //await _plotDrawer.DrawCorrelationMatrix(this);
+            _eventMediator.Subscribe<ButtonClickEvent>(async (eventArgs) =>
+            {
+                await OnLoadDataButtonClick(eventArgs);
+                await InvokeAsync(StateHasChanged);
+            });
+
+            await _plotDrawer.DrawOrderVolumeBarPlot(this, new List<string>(), new List<decimal>());
+            await _plotDrawer.DrawOrderVolumePiePlot(this, new List<string>(), new List<decimal>(), "order-volume-customer-pie", "Customer");
+            await _plotDrawer.DrawOrderVolumePiePlot(this, new List<string>(), new List<decimal>(), "order-volume-product-pie", "Product");
+            await _plotDrawer.DrawOrderVolumePiePlot(this, new List<string>(), new List<decimal>(), "order-volume-sales-person-pie", "Sales Person");
+            await _plotDrawer.DrawOrderVolumePiePlot(this, new List<string>(), new List<decimal>(), "order-volume-territory-pie", "Territory");
         }
+
+        _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(this));
     }
 
-    public void Dispose()
+    public async Task OnLoadDataButtonClick(ButtonClickEvent args)
     {
-        Console.WriteLine("Disposing 'Finances' page component.");
+        _appState.FromDateFilter = _appState.FromDateFilter.Value.ToStartOfDay();
+        _appState.UntilDateFilter = _appState.FromDateFilter.Value.ToEndOfDay();
+
+        var barplotDatasource = await _datastoreService.CreatePlotDataSource(GetTimeUnitColumn());
+        await _plotDrawer.DrawOrderVolumeBarPlot(this, barplotDatasource.Item1, barplotDatasource.Item2);
+
+        var customerPieplotDatasource = await _datastoreService.CreatePlotDataSource("Customer", 10, true);
+        await _plotDrawer.DrawOrderVolumePiePlot(this, customerPieplotDatasource.Item1, customerPieplotDatasource.Item2, "order-volume-customer-pie", "Customer");
+
+        var productPieplotDatasource = await _datastoreService.CreatePlotDataSource("Product", 10, true);
+        await _plotDrawer.DrawOrderVolumePiePlot(this, productPieplotDatasource.Item1, productPieplotDatasource.Item2, "order-volume-product-pie", "Product");
+
+        var salesPersonPieplotDatasource = await _datastoreService.CreatePlotDataSource("SalesPerson", 10, true);
+        await _plotDrawer.DrawOrderVolumePiePlot(this, salesPersonPieplotDatasource.Item1, salesPersonPieplotDatasource.Item2, "order-volume-sales-person-pie", "Sales Person");
+
+        var territoryPieplotDatasource = await _datastoreService.CreatePlotDataSource("Territory", 10, true);
+        await _plotDrawer.DrawOrderVolumePiePlot(this, territoryPieplotDatasource.Item1, territoryPieplotDatasource.Item2, "order-volume-territory-pie", "Territory");
+
+        await _plotDrawer.DrawHeatmapForOrderVolumeMatrix(this);
+    }
+
+    private string GetTimeUnitColumn()
+    {
+        string timeUnitColumn = "";
+        switch (SelectedTimeUnit)
+        {
+            case "CW":
+                timeUnitColumn = "TimeUnitCalenderWeek";
+                break;
+
+            case "Month":
+                timeUnitColumn = "TimeUnitMonth";
+                break;
+
+            case "Quarter":
+                timeUnitColumn = "TimeUnitQuarter";
+                break;
+
+            case "Year":
+                timeUnitColumn = "TimeUnitYear";
+                break;
+        }
+
+        return timeUnitColumn;
     }
 }

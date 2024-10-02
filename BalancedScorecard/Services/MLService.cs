@@ -138,25 +138,25 @@ namespace BalancedScorecard.Services
 
         public async Task TrainModel()
         {
-            try
-            {
-                var model = _pipeLine.Fit(_trainData);
-                var predictions = model.Transform(_testData);
-                var metrics = _mLContext.Regression.Evaluate(predictions, labelColumnName: "Label");
+            //try
+            //{
+            //    var model = _pipeLine.Fit(_trainData);
+            //    var predictions = model.Transform(_testData);
+            //    var metrics = _mLContext.Regression.Evaluate(predictions, labelColumnName: "Label");
 
-                Console.WriteLine($"Mean Absolute Error: {metrics.MeanAbsoluteError}");
-                Console.WriteLine($"Mean Squared Error: {metrics.MeanSquaredError}");
-                Console.WriteLine($"Root Mean Squared Error: {metrics.RootMeanSquaredError}");
-                Console.WriteLine($"Average Loss Function: {metrics.LossFunction}");
-                Console.WriteLine($"R-Squared: {metrics.RSquared}");
+            //    Console.WriteLine($"Mean Absolute Error: {metrics.MeanAbsoluteError}");
+            //    Console.WriteLine($"Mean Squared Error: {metrics.MeanSquaredError}");
+            //    Console.WriteLine($"Root Mean Squared Error: {metrics.RootMeanSquaredError}");
+            //    Console.WriteLine($"Average Loss Function: {metrics.LossFunction}");
+            //    Console.WriteLine($"R-Squared: {metrics.RSquared}");
 
-                _dataStoreService.EnsureDirectoryExistsAndHidden("./Models/");
-                _mLContext.Model.Save(model, _trainData.Schema, "./Models/sales_forecast_model.zip");
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception.Message);
-            }
+            //    _dataStoreService.EnsureDirectoryExistsAndHidden("./Models/");
+            //    _mLContext.Model.Save(model, _trainData.Schema, "./Models/sales_forecast_model.zip");
+            //}
+            //catch (Exception exception)
+            //{
+            //    Console.WriteLine(exception.Message);
+            //}
 
         }
 

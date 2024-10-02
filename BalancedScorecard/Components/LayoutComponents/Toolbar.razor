@@ -1,37 +1,50 @@
 ﻿@using BalancedScorecard.Enums
 @using BalancedScorecard.Events
 @using BalancedScorecard.Services
+@using BalancedScorecard.Components.Pages
 
 @inject IServiceProvider _services
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="120">
     <RadzenSidebarToggle Click="@OnSidebarToggleButtonClick" />
-    @if (_componentService.RoutedPage is not null)
+    @if (_appState.RoutedPage is not null)
     {
-        switch (_services.GetRequiredService<IComponentService>().GetRoutedPageEnum())
+        if (_appState.RoutedPage is Finances)
         {
-            case (PageComponent.Finances):
-                <RadzenRow Gap="20">
-                    <RadzenButton Icon="dashboard" Text="Load Data" ButtonStyle="ButtonStyle.Base" Click="@(() => _services.GetRequiredService<IComponentService>().LoadDataButtonClick())" />
-                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="20">
-                        <RadzenLabel Text="From: " Component="RadzenFromDatePicker" />
-                        <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_services.GetRequiredService<IDataStoreService>().FromDateFilter) Change="@(args => _services.GetRequiredService<IDataStoreService>().FromDateFilter = args)" Name="RadzenFromDatePicker" />
-                        <RadzenLabel Text="Until: " Component="RadzenUntilDatePicker" />
-                        <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_services.GetRequiredService<IDataStoreService>().UntilDateFilter) Change="@(args => _services.GetRequiredService<IDataStoreService>().UntilDateFilter = args)" Name="RadzenUntilDatePicker" />
-                    </RadzenStack>
-                </RadzenRow>
-            break;
+            <RadzenRow Gap="20">
+                <RadzenButton Icon="dashboard" Text="Update Data Store" ButtonStyle="ButtonStyle.Base" Click="@(() => _datastoreService.UpdateDataStore())" />
+                <RadzenButton Icon="dashboard" Text="Load Data" ButtonStyle="ButtonStyle.Base" Click="@OnLoadDataButtonClick" />
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="20">
+                    <RadzenLabel Text="From: " Component="RadzenFromDatePicker" />
+                    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_appState.FromDateFilter) Change="@(args => _appState.FromDateFilter = args)" Name="RadzenFromDatePicker" />
+                    <RadzenLabel Text="Until: " Component="RadzenUntilDatePicker" />
+                    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_appState.UntilDateFilter) Change="@(args => _appState.UntilDateFilter = args)" Name="RadzenUntilDatePicker" />
+                </RadzenStack>
+            </RadzenRow>
         }
     }
 </RadzenStack>
 
 @code {
-    private IComponentService _componentService => _services.GetRequiredService<IComponentService>();
     private IDataStoreService _datastoreService => _services.GetRequiredService<IDataStoreService>();
     private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
+    private IAppState _appState => _services.GetRequiredService<IAppState>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        _eventMediator.Subscribe<VisualStateChangedEvent>(async (eventArgs) =>
+        {
+            await InvokeAsync(StateHasChanged);
+        });
+    }
 
     private void OnSidebarToggleButtonClick()
     {
         _eventMediator.Publish<ButtonClickEvent>(new ButtonClickEvent(RaisingButton.SidebarToggleButton));
+    }
+
+    private void OnLoadDataButtonClick()
+    {
+        _eventMediator.Publish<ButtonClickEvent>(new ButtonClickEvent(RaisingButton.LoadDataButton));
     }
 }

@@ -3,19 +3,27 @@
 using Radzen;
 using BalancedScorecard.Components;
 using BalancedScorecard.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+//builder.WebHost.UseUrls("http://0.0.0.0:80");
+
+// Add components.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddRadzenComponents();
-builder.Services.AddScoped<IDataStoreService, DataStoreService>();
+
+// Add datastore
+builder.Services.AddSingleton<IDataStoreService, DataStoreService>();
+builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<IDataStoreService>());
+
+// Add services
 builder.Services.AddScoped<IPlotDrawer, PlotDrawer>();
 builder.Services.AddScoped<IEventMediator, EventMediator>();
-builder.Services.AddScoped<IComponentService, ComponentService>();
 builder.Services.AddScoped<IMLService, MLService>();
 builder.Services.AddScoped<ITerminalService, TerminalService>();
 builder.Services.AddScoped<ITransformer, Transformer>();
+builder.Services.AddScoped<IAppState, AppState>();
 
 var app = builder.Build();
 
