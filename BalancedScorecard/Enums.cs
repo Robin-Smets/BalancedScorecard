@@ -27,4 +27,11 @@
         SidebarToggleButton,
         LoadDataButton
     }
+
+    public enum KPI
+    {
+        Undefined,
+        OrderVolume,
+        Revenue
+    }
 }

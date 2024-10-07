@@ -1,5 +1,6 @@
 ﻿// IDataStoreService.cs
 
+using BalancedScorecard.Enums;
 using System.Data;
 
 namespace BalancedScorecard.Services
@@ -25,6 +26,13 @@ namespace BalancedScorecard.Services
         /// Creates a data source for a two dimensional plot.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation of updating the datastore.</returns>
-        Task<(List<string>, List<decimal>)> CreatePlotDataSource(string groupByColumn, DateTime fromDateFilter, DateTime untilDateFilter, int top = 0, bool cutID = false);
+        Task<(List<string>, List<decimal>)> CreatePlotDataSource(
+            string groupByColumn,
+            DateTime fromDateFilter,
+            DateTime untilDateFilter,
+            int top = 0,
+            bool cutID = false,
+            KPI kpi = KPI.Undefined
+        );
     }
 }

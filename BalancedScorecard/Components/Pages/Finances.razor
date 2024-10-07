@@ -4,6 +4,7 @@
 @using BalancedScorecard.Enums
 @using BalancedScorecard.Events
 @using BalancedScorecard.Services
+@using System.Reflection
 @using static BalancedScorecard.Extensions
 
 @inject IJSRuntime _jSRuntime
@@ -58,6 +59,46 @@
             </RadzenRow>
 
         </RadzenTabsItem>
+        <RadzenTabsItem Text="Test">
+            <div id="myPlot" style="width:600px;height:400px;"></div>
+
+            <script>
+                var data = [{
+                    values: [19, 26, 55],
+                    labels: ['Residential', 'Non-Residential', 'Utility'],
+                    type: 'pie'
+                }];
+
+                var layout = {
+                    height: 400,
+                    width: 500
+                };
+
+                Plotly.newPlot('myPlot', data, layout);
+
+                var elementId = 'myPlot';
+                var plotElement = document.getElementById(elementId);
+
+                plotElement.on('plotly_afterplot', function () {
+                    console.log('Plot fully rendered');
+
+                    plotElement.on('plotly_doubleclick', function (data) {
+                        console.log('Plot double clicked');
+                    });
+                    plotElement.on('plotly_click', function (data) {
+                        console.log('Plot clicked');
+                        if (data.points && data.points.length > 0) {
+                            console.log('Data has points');
+                            var point = data.points[0];
+                            var label = point.label;
+                            var value = point.value;
+                            DotNet.invokeMethodAsync('BalancedScorecard', 'OnPlotClick', label, value);
+                        }
+                    });
+                });
+
+            </script>
+        </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
 
@@ -75,6 +116,14 @@
     protected override async Task OnInitializedAsync()
     {
         _appState.RoutedPage = this;
+        GetComponentAssembly();
+    }
+
+    public void GetComponentAssembly()
+    {
+        var componentType = typeof(Finances);
+        Assembly assembly = componentType.Assembly;
+        Console.WriteLine($"Die Komponente {componentType.Name} befindet sich in der Assembly: {assembly.FullName}");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -118,22 +167,28 @@
         _appState.FromDateFilter = _appState.FromDateFilter.Value.ToStartOfDay();
         _appState.UntilDateFilter = _appState.UntilDateFilter.Value.ToEndOfDay();
 
-        var barplotDatasource = await _datastoreService.CreatePlotDataSource(GetTimeUnitColumn(), _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value);
+        var barplotDatasource = await _datastoreService.CreatePlotDataSource(GetTimeUnitColumn(), _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, kpi: KPI.OrderVolume);
         await _plotDrawer.DrawOrderVolumeBarPlot(this, barplotDatasource.Item1, barplotDatasource.Item2);
 
-        var customerPieplotDatasource = await _datastoreService.CreatePlotDataSource("Customer", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true);
+        var customerPieplotDatasource = await _datastoreService.CreatePlotDataSource("Customer", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true, KPI.OrderVolume);
         await _plotDrawer.DrawOrderVolumePiePlot(this, customerPieplotDatasource.Item1, customerPieplotDatasource.Item2, "order-volume-customer-pie", "Customer");
 
-        var productPieplotDatasource = await _datastoreService.CreatePlotDataSource("Product", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true);
+        var productPieplotDatasource = await _datastoreService.CreatePlotDataSource("Product", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true, KPI.OrderVolume);
         await _plotDrawer.DrawOrderVolumePiePlot(this, productPieplotDatasource.Item1, productPieplotDatasource.Item2, "order-volume-product-pie", "Product");
 
-        var salesPersonPieplotDatasource = await _datastoreService.CreatePlotDataSource("SalesPerson", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true);
+        var salesPersonPieplotDatasource = await _datastoreService.CreatePlotDataSource("SalesPerson", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true, KPI.OrderVolume);
         await _plotDrawer.DrawOrderVolumePiePlot(this, salesPersonPieplotDatasource.Item1, salesPersonPieplotDatasource.Item2, "order-volume-sales-person-pie", "Sales Person");
 
-        var territoryPieplotDatasource = await _datastoreService.CreatePlotDataSource("Territory", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true);
+        var territoryPieplotDatasource = await _datastoreService.CreatePlotDataSource("Territory", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true, KPI.OrderVolume);
         await _plotDrawer.DrawOrderVolumePiePlot(this, territoryPieplotDatasource.Item1, territoryPieplotDatasource.Item2, "order-volume-territory-pie", "Territory");
 
         await _plotDrawer.DrawHeatmapForOrderVolumeMatrix(this);
+    }
+
+    private bool IsOrderVolumeRow(DataRow row)
+    {
+        var status = row["Status"].ToString();
+        return status == "1" || status == "2" || status == "3";
     }
 
     private string GetTimeUnitColumn()
@@ -159,5 +214,13 @@
         }
 
         return timeUnitColumn;
+    }
+
+    // Diese Methode wird von JavaScript aufgerufen
+    [JSInvokable("OnPlotClick")]
+    public static void OnPlotClick(string label, decimal value)
+    {
+        Console.WriteLine($"Doppelklick auf: Label: {label}, Value: {value}");
+        // Hier kannst du auch andere Logik einbauen, z.B. einen Event feuern oder UI aktualisieren
     }
 }

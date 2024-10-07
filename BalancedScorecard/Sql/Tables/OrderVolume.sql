@@ -55,8 +55,10 @@ SELECT
         (OrderDetail.LineTotal / OrderLineTotal.OrderLineTotal) * 
         (OrderTable.Freight + OrderTable.TaxAmt))
         OVER ())
- 
- AS OrderVolumePercentage
+        AS OrderVolumePercentage,
+
+        OrderTable.Status
+
 
 FROM Sales.SalesOrderHeader AS OrderTable
 INNER JOIN Sales.SalesOrderDetail AS OrderDetail
@@ -76,4 +78,6 @@ LEFT JOIN Person.Person AS PersonSales
 LEFT JOIN Sales.SalesTerritory AS SalesTerritory
     ON OrderTable.TerritoryID = SalesTerritory.TerritoryID
 JOIN OrderDetails AS OrderLineTotal
-    ON OrderTable.SalesOrderID = OrderLineTotal.SalesOrderID;
+    ON OrderTable.SalesOrderID = OrderLineTotal.SalesOrderID
+
+    WHERE OrderTable.Status = 5;
