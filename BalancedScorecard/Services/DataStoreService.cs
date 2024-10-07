@@ -15,8 +15,6 @@ namespace BalancedScorecard.Services
 {
     public class DataStoreService : IDataStoreService
     {
-        public DateTime? FromDateFilter { get; set; }
-        public DateTime? UntilDateFilter { get; set; }
         public DataTableCollection DataTables => _dataStore.Tables;
 
         /// <summary>
@@ -26,32 +24,29 @@ namespace BalancedScorecard.Services
         private string _sqlScriptsPath;
         private string _connectionString;
         private readonly IServiceProvider _services;
+        //private IAppState _appState;
 
         public DataStoreService(IServiceProvider services) 
         {
             _services = services;
-            FromDateFilter = DateTime.Now;
-            UntilDateFilter = DateTime.Now;
+            //_appState = _services.GetRequiredService<IAppState>();
+            //FromDateFilter = DateTime.Now;
+            //UntilDateFilter = DateTime.Now;
             _dataStore = new DataSet();
             _sqlScriptsPath = "./Sql/Tables/";
             _connectionString = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=AdventureWorks2022;UID=sa;PWD=@Splitsoul3141;TrustServerCertificate=yes;";
         }
 
-        public async Task<(List<string>, List<decimal>)> CreatePlotDataSource(string groupByColumn, int top = 0, bool cutID = false)
+        public async Task<(List<string>, List<decimal>)> CreatePlotDataSource(string groupByColumn, DateTime fromDateFilter, DateTime untilDateFilter, int top = 0, bool cutID = false)
         {
             var plotXValues = new List<string>();
             var plotYValues = new List<decimal>();
             var plotGroups = new Dictionary<string, decimal>();
             var groupNames = new Dictionary<string, string>();
 
-            FromDateFilter = FromDateFilter.Value.Date;
-            UntilDateFilter = UntilDateFilter.Value.Date
-                                                   .AddDays(1)
-                                                   .AddTicks(-1);
-
             var filteredRows = DataTables["OrderVolume"].AsEnumerable()
-                                                        .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()) >= FromDateFilter)
-                                                        .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()) <= UntilDateFilter);
+                                                        .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()) >= fromDateFilter)
+                                                        .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()) <= untilDateFilter);
 
             foreach (var row in filteredRows)
             {

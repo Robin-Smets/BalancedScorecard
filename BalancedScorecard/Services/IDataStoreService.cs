@@ -11,18 +11,6 @@ namespace BalancedScorecard.Services
     public interface IDataStoreService : IHostedService
     {
         /// <summary>
-        /// Gets or sets the starting date filter for data to be considered in the analysis.
-        /// Only data after this date will be processed.
-        /// </summary>
-        DateTime? FromDateFilter { get; set; }
-
-        /// <summary>
-        /// Gets or sets the end date filter for data to be considered in the analysis.
-        /// Only data up to and including this date will be processed.
-        /// </summary>
-        DateTime? UntilDateFilter { get; set; }
-
-        /// <summary>
         /// Gets the collection of DataTables representing the datastore's current state.
         /// </summary>
         DataTableCollection DataTables { get; }
@@ -37,6 +25,6 @@ namespace BalancedScorecard.Services
         /// Creates a data source for a two dimensional plot.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation of updating the datastore.</returns>
-        Task<(List<string>, List<decimal>)> CreatePlotDataSource(string groupByColumn, int top = 0, bool cutID = false);
+        Task<(List<string>, List<decimal>)> CreatePlotDataSource(string groupByColumn, DateTime fromDateFilter, DateTime untilDateFilter, int top = 0, bool cutID = false);
     }
 }

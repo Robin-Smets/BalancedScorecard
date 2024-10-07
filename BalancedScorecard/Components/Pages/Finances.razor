@@ -116,21 +116,21 @@
     public async Task OnLoadDataButtonClick(ButtonClickEvent args)
     {
         _appState.FromDateFilter = _appState.FromDateFilter.Value.ToStartOfDay();
-        _appState.UntilDateFilter = _appState.FromDateFilter.Value.ToEndOfDay();
+        _appState.UntilDateFilter = _appState.UntilDateFilter.Value.ToEndOfDay();
 
-        var barplotDatasource = await _datastoreService.CreatePlotDataSource(GetTimeUnitColumn());
+        var barplotDatasource = await _datastoreService.CreatePlotDataSource(GetTimeUnitColumn(), _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value);
         await _plotDrawer.DrawOrderVolumeBarPlot(this, barplotDatasource.Item1, barplotDatasource.Item2);
 
-        var customerPieplotDatasource = await _datastoreService.CreatePlotDataSource("Customer", 10, true);
+        var customerPieplotDatasource = await _datastoreService.CreatePlotDataSource("Customer", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true);
         await _plotDrawer.DrawOrderVolumePiePlot(this, customerPieplotDatasource.Item1, customerPieplotDatasource.Item2, "order-volume-customer-pie", "Customer");
 
-        var productPieplotDatasource = await _datastoreService.CreatePlotDataSource("Product", 10, true);
+        var productPieplotDatasource = await _datastoreService.CreatePlotDataSource("Product", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true);
         await _plotDrawer.DrawOrderVolumePiePlot(this, productPieplotDatasource.Item1, productPieplotDatasource.Item2, "order-volume-product-pie", "Product");
 
-        var salesPersonPieplotDatasource = await _datastoreService.CreatePlotDataSource("SalesPerson", 10, true);
+        var salesPersonPieplotDatasource = await _datastoreService.CreatePlotDataSource("SalesPerson", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true);
         await _plotDrawer.DrawOrderVolumePiePlot(this, salesPersonPieplotDatasource.Item1, salesPersonPieplotDatasource.Item2, "order-volume-sales-person-pie", "Sales Person");
 
-        var territoryPieplotDatasource = await _datastoreService.CreatePlotDataSource("Territory", 10, true);
+        var territoryPieplotDatasource = await _datastoreService.CreatePlotDataSource("Territory", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true);
         await _plotDrawer.DrawOrderVolumePiePlot(this, territoryPieplotDatasource.Item1, territoryPieplotDatasource.Item2, "order-volume-territory-pie", "Territory");
 
         await _plotDrawer.DrawHeatmapForOrderVolumeMatrix(this);
