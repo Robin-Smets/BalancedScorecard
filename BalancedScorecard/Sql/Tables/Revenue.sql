@@ -14,9 +14,9 @@ SELECT
 	DATEPART(MONTH, OrderTable.OrderDate) AS OrderDateMonth, 
 	DATEPART(QUARTER, OrderTable.OrderDate) AS OrderDateQuarter, 
 	DATEPART(YEAR, OrderTable.OrderDate) AS OrderDateYear,
-	CONCAT(DATEPART(ISO_WEEK, OrderTable.OrderDate), '/', DATEPART(YEAR, OrderTable.OrderDate)) AS TimeUnitCalenderWeek,
-	CONCAT(DATENAME(MONTH, OrderTable.OrderDate), '/', DATEPART(YEAR, OrderTable.OrderDate)) AS TimeUnitMonth, 
-	CONCAT(DATEPART(QUARTER, OrderTable.OrderDate), '/', DATEPART(YEAR, OrderTable.OrderDate)) AS TimeUnitQuarter, 
+	CONCAT(DATEPART(ISO_WEEK, OrderTable.OrderDate), '/', DATEPART(YEAR, OrderTable.OrderDate)) AS CW,
+	CONCAT(DATENAME(MONTH, OrderTable.OrderDate), '/', DATEPART(YEAR, OrderTable.OrderDate)) AS Month, 
+	CONCAT(DATEPART(QUARTER, OrderTable.OrderDate), '/', DATEPART(YEAR, OrderTable.OrderDate)) AS Quarter, 
 	OrderTable.OrderDate,
 	OrderTable.SalesOrderID,
 
@@ -39,7 +39,7 @@ SELECT
     -- Calculate proportional Freight and TaxAmt for each line item
     OrderDetail.LineTotal + 
         (OrderDetail.LineTotal / OrderLineTotal.OrderLineTotal) * 
-        (OrderTable.Freight + OrderTable.TaxAmt) AS OrderVolume,
+        (OrderTable.Freight + OrderTable.TaxAmt) AS Revenue,
 
     -- Gesamtsumme von OrderVolume (über alle Zeilen hinweg)
     SUM(OrderDetail.LineTotal + 

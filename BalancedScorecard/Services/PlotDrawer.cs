@@ -6,6 +6,7 @@ using System.Globalization;
 using System;
 using BalancedScorecard.Components.Pages;
 using BalancedScorecard.Enums;
+using static TorchSharp.torch.utils;
 
 namespace BalancedScorecard.Services
 {
@@ -17,118 +18,126 @@ namespace BalancedScorecard.Services
         private IDataStoreService _dataStoreService => _services.GetRequiredService<IDataStoreService>();
         private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
         private ITransformer _transformer => _services.GetRequiredService<ITransformer>();
-        
+        private IAppState _appState => _services.GetRequiredService<IAppState>();
+
         public PlotDrawer(IServiceProvider services, IJSRuntime jSRuntime)
         {
             _jSRuntime = jSRuntime;
             _services = services;
         }
 
-        public async Task DrawOrderVolumeBarPlot(IComponent sender, List<string> xValues, List<decimal> yValues)
+        public async Task DrawFinancesPlots(IComponent sender)
         {
-            var data = new[]
-            {
-                new
+            var fromDateFilter = _appState.FromDateFilter.ToStartOfDay();
+            var untilDateFilter = _appState.UntilDateFilter.ToEndOfDay();
+            var timeUnit = _appState.RevenueBarPlotSelectedTimeUnit;
+            var whereFilter = _appState.RevenueBarPlotWhereFilter;
+
+            var plotTasks = new List<Task>();
+
+            plotTasks.Add(
+                Task.Run(async () =>
                 {
-                    x = xValues.ToArray(),
-                    y = yValues.ToArray(),
-                    type = "bar"
-                }
-            };
+                    var dataSource = await _dataStoreService.CreatePlotDataSource(timeUnit, fromDateFilter, untilDateFilter, whereFilter: whereFilter);
+                    var title = $"Revenue by {timeUnit.ToLower()}";
+                    if (whereFilter.Item1 != "" && whereFilter.Item2 != "")
+                    {
+                        title += $" ({whereFilter.Item1} = {whereFilter.Item2})";
+                    }
+                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-bar-plot", "bar", title);
+                })
+            );
 
-            var layout = new
-            {
-                title = "Order Volume Over Time"
-            };
+            plotTasks.Add(
+                Task.Run(async () =>
+                {
+                    var dataSource = await _dataStoreService.CreatePlotDataSource("Customer", fromDateFilter, untilDateFilter, 10, true);
+                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-customer-pie", "pie", "Top ten total revenue by customer");
+                })
+            );
 
-            await _jSRuntime.InvokeVoidAsync("createPlot", "order_volume_bar_plot", data, layout);
-            _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(sender));
+            plotTasks.Add(
+                Task.Run(async () =>
+                {
+                    var dataSource = await _dataStoreService.CreatePlotDataSource("Product", fromDateFilter, untilDateFilter, 10, true);
+                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-product-pie", "pie", "Top ten total revenue by product");
+                })
+            );
+
+            plotTasks.Add(
+                Task.Run(async () =>
+                {
+                    var dataSource = await _dataStoreService.CreatePlotDataSource("SalesPerson", fromDateFilter, untilDateFilter, 10, true);
+                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-sales-person-pie", "pie", "Top ten total revenue by sales person");
+                })
+            );
+
+            plotTasks.Add(
+                Task.Run(async () =>
+                {
+                    var dataSource = await _dataStoreService.CreatePlotDataSource("Territory", fromDateFilter, untilDateFilter, 10, true);
+                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-territory-pie", "pie", "Top ten total revenue by territory");
+                })
+            );
+
+            plotTasks.Add(
+                Task.Run(async () =>
+                {
+                    var dataSource = await _dataStoreService.CreateHeatMapDataSource(fromDateFilter, untilDateFilter);
+                    await DrawPlot(sender, dataSource.Item1, new List<decimal>(), "revenue-heatmap", "heatmap", "Revenue by feature combination", dataSource.Item3);
+                })
+            );
+
+            await Task.WhenAll(plotTasks);
+
+            Console.WriteLine("Finances plots were created succesfully.");
         }
 
-        public async Task DrawOrderVolumePiePlot(IComponent sender, List<string> xValues, List<decimal> yValues, string htmlElement, string title)
+        public async Task DrawPlot(IComponent sender, List<string> xValues, List<decimal> yValues, string htmlElement, string type, string title, decimal[,] z = null)
         {
-            var data = new[]
+            object[] data = new object[]
             {
-                new
-                {
-                    labels = xValues.ToArray(),
-                    values = yValues.ToArray(),
-                    type = "pie"
-                }
+        type switch
+        {
+            "pie" => new { labels = xValues.ToArray(), values = yValues.ToArray(), type },
+            "bar" => new { x = xValues.ToArray(), y = yValues.ToArray(), type },
+            "heatmap" => new { x = xValues.ToArray(), y = xValues.ToArray(), z = z != null ? ConvertToJaggedArray(z) : null, type },
+            _ => throw new ArgumentException($"Unsupported plot type: {type}")
+        }
             };
 
-            var layout = new
+            object layout = type switch
             {
-                title = $"Order Volume Over {title}"
+                "pie" => new { title },
+                "bar" => new { title },
+                "heatmap" => new
+                {
+                    title,
+                    xaxis = new { title = "", automargin = true },
+                    yaxis = new { title = "", automargin = true },
+                    margin = new { l = 80, r = 30, t = 40, b = 80 }
+                },
+                _ => throw new ArgumentException($"Unsupported plot type: {type}")
             };
 
             await _jSRuntime.InvokeVoidAsync("createPlot", htmlElement, data, layout);
             _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(sender));
         }
 
-        public async Task DrawHeatmapForOrderVolumeMatrix(IComponent sender)
+
+        private List<List<decimal>> ConvertToJaggedArray(decimal[,] input)
         {
-            var topTenCustomers = _transformer.GetTopTenIDs("CustomerID");
-            var topTenProducts = _transformer.GetTopTenIDs("ProductID");
-            var topTenSalesPersons = _transformer.GetTopTenIDs("SalesPersonID");
-            var topTenTerritorys = _transformer.GetTopTenIDs("TerritoryID");
-            var filteredData = _transformer.FilterDataTableByTopTenIDs(_dataStoreService.DataTables["OrderVolume"], topTenSalesPersons, topTenCustomers, topTenProducts, topTenTerritorys);
-            var orderVolumeMatrix = _transformer.CreateAverageOrderVolumeMatrix(filteredData);
-            // Schritt 1: X-Achsen-Werte und Y-Achsen-Werte (Spalten und Zeilen)
-            var xValues = new List<string>();
-            var yValues = new List<string>();
-
-            // Schritt 2: Z-Werte (die eigentlichen Heatmap-Daten) vorbereiten
-            var zValues = new List<List<decimal>>();
-
-            // Füge die Spaltenüberschriften (außer der YAxis-Spalte) zur X-Achse hinzu
-            foreach (DataColumn column in orderVolumeMatrix.Columns)
+            var result = new List<List<decimal>>();
+            for (int i = 0; i < input.GetLength(0); i++)
             {
-                if (column.ColumnName != "YAxis") // YAxis ist für die Y-Achse
+                var row = new List<decimal>();
+                for (int j = 0; j < input.GetLength(1); j++)
                 {
-                    xValues.Add(column.ColumnName);
+                    row.Add(input[i, j]);
                 }
+                result.Add(row);
             }
-
-            // Iteriere durch die Reihen der Tabelle und fülle die Y-Achse und die Z-Werte
-            foreach (DataRow row in orderVolumeMatrix.Rows)
-            {
-                // Y-Achsen-Wert (entspricht der YAxis-Spalte)
-                yValues.Add(row["YAxis"].ToString());
-
-                // Z-Werte für diese Zeile (Werte aus den übrigen Spalten)
-                var zRow = new List<decimal>();
-                foreach (var x in xValues)
-                {
-                    zRow.Add(row.Field<decimal>(x));
-                }
-                zValues.Add(zRow);
-            }
-
-            // Schritt 3: Heatmap-Daten für Plotly.js vorbereiten
-            var data = new[]
-            {
-                new
-                {
-                    z = zValues.Select(row => row.ToArray()).ToArray(),
-                    x = xValues.ToArray(),
-                    y = yValues.ToArray(),
-                    type = "heatmap"
-                }
-            };
-
-            // Schritt 4: Layout für die Heatmap erstellen
-            var layout = new
-            {
-                title = "Average Order Volume Over Feature Combination",
-                xaxis = new { title = "", automargin = true },
-                yaxis = new { title = "", automargin = true },
-                margin = new { l=80, r=30, t=40, b=80 }
-            };
-
-            // Schritt 5: Plotly.js über JSRuntime aufrufen, um die Heatmap zu rendern
-            await _jSRuntime.InvokeVoidAsync("createPlot", "order_volume_heat_map", data, layout);
-            _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(sender));
+            return result;
         }
     }
 }

@@ -2,7 +2,7 @@
 @* App.razor *@
 
 @inject DialogService _dialogService
-@* @inject IServiceProvider _services *@
+@inject IEventMediator _eventMediator
 
 <!DOCTYPE html>
 <html lang="en">
@@ -29,10 +29,10 @@
 
 @code
 {
-    // private IDataStoreService _datastoreService => _services.GetRequiredService<IDataStoreService>();
+    public static IEventMediator EventMediator {get; set;}
 
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     _datastoreService.UpdateDataStore();
-    // }
+    protected override async Task OnInitializedAsync()
+    {
+        EventMediator = _eventMediator;
+    }
 }

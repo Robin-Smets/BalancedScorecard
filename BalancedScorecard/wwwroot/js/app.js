@@ -16,7 +16,7 @@
                 var point = data.points[0];
                 var label = point.label;
                 var value = point.value;
-                DotNet.invokeMethodAsync('BalancedScorecard', 'OnPlotClick', label, value);
+                DotNet.invokeMethodAsync('BalancedScorecard', 'OnPlotClick', elementId, label, value);
             }
         });
     });

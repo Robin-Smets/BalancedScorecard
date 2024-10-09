@@ -36,4 +36,18 @@ namespace BalancedScorecard.Events
             Button = button;
         }
     }
+
+    public class PlotClickedEvent
+    {
+        public string ElementId { get; private set; }
+        public string Label { get; private set; }
+        public decimal Value { get; private set; }
+
+        public PlotClickedEvent(string elementId, string label, decimal value)
+        {
+            ElementId = elementId;
+            Label = label;
+            Value = value;
+        }
+    }
 }

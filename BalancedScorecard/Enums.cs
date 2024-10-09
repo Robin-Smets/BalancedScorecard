@@ -34,4 +34,10 @@
         OrderVolume,
         Revenue
     }
+
+    public enum PlotType
+    {
+        Bar,
+        Pie
+    }
 }

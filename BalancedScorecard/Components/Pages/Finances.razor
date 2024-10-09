@@ -8,7 +8,6 @@
 @using static BalancedScorecard.Extensions
 
 @inject IJSRuntime _jSRuntime
-
 @inject IServiceProvider _services
 
 <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
@@ -16,17 +15,15 @@
         <RadzenTabsItem Text="Order Volume">
             
             <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
-
                 <RadzenColumn>
                     <RadzenCard Variant="Variant.Outlined">
-                        <div id="order_volume_bar_plot" width="100%" height="100%"/>
+                        <div id="revenue-bar-plot" width="100%" height="100%"/>
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
                             <RadzenLabel Text="Time Unit:" Component="DropDownBindValue" />
-                            <RadzenDropDown @bind-Value=@SelectedTimeUnit Data=@timeUnits Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+                            <RadzenDropDown @bind-Value=@_appState.RevenueBarPlotSelectedTimeUnit Data=@timeUnits Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
                         </RadzenStack>
                     </RadzenCard>
                 </RadzenColumn>
-
             </RadzenRow>
 
             <RadzenRow class="rz-p-4 rz-w-100">
@@ -34,18 +31,18 @@
                     <RadzenCard Variant="Variant.Outlined">
                         <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
                             <RadzenColumn class="rz-p-4 rz-w-50">
-                                <div id="order-volume-customer-pie"/>
+                                <div id="revenue-customer-pie" />
                             </RadzenColumn>
                             <RadzenColumn class="rz-p-4 rz-w-50">
-                                <div id="order-volume-product-pie" />
+                                <div id="revenue-product-pie" />
                             </RadzenColumn>
                         </RadzenRow>
                         <RadzenRow JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4 rz-w-100">
                             <RadzenColumn class="rz-p-4 rz-w-50">
-                                <div id="order-volume-sales-person-pie" />
+                                <div id="revenue-sales-person-pie" />
                             </RadzenColumn>
                             <RadzenColumn class="rz-p-4 rz-w-50">
-                                <div id="order-volume-territory-pie" />
+                                <div id="revenue-territory-pie" />
                             </RadzenColumn>
                         </RadzenRow>
                     </RadzenCard>
@@ -54,50 +51,10 @@
 
             <RadzenRow class="rz-p-4 rz-w-100 rz-pb-12">
                 <RadzenCard Variant="Variant.Outlined" class="rz-w-100 rz-pb-12" Style="aspect-ratio: 1 / 1;">
-                    <div id="order_volume_heat_map" style="width: 100%; aspect-ratio: 1 / 1;" />
+                    <div id="revenue-heatmap" style="width: 100%; aspect-ratio: 1 / 1;" />
                 </RadzenCard>
             </RadzenRow>
 
-        </RadzenTabsItem>
-        <RadzenTabsItem Text="Test">
-            <div id="myPlot" style="width:600px;height:400px;"></div>
-
-            <script>
-                var data = [{
-                    values: [19, 26, 55],
-                    labels: ['Residential', 'Non-Residential', 'Utility'],
-                    type: 'pie'
-                }];
-
-                var layout = {
-                    height: 400,
-                    width: 500
-                };
-
-                Plotly.newPlot('myPlot', data, layout);
-
-                var elementId = 'myPlot';
-                var plotElement = document.getElementById(elementId);
-
-                plotElement.on('plotly_afterplot', function () {
-                    console.log('Plot fully rendered');
-
-                    plotElement.on('plotly_doubleclick', function (data) {
-                        console.log('Plot double clicked');
-                    });
-                    plotElement.on('plotly_click', function (data) {
-                        console.log('Plot clicked');
-                        if (data.points && data.points.length > 0) {
-                            console.log('Data has points');
-                            var point = data.points[0];
-                            var label = point.label;
-                            var value = point.value;
-                            DotNet.invokeMethodAsync('BalancedScorecard', 'OnPlotClick', label, value);
-                        }
-                    });
-                });
-
-            </script>
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
@@ -107,7 +64,6 @@
 
     private IPlotDrawer _plotDrawer => _services.GetRequiredService<IPlotDrawer>();
     private IEventMediator _eventMediator => _services.GetRequiredService<IEventMediator>();
-    private IDataStoreService _datastoreService => _services.GetRequiredService<IDataStoreService>();
     private IAppState _appState => _services.GetRequiredService<IAppState>();
 
     private int selectedIndex = 0;
@@ -116,23 +72,12 @@
     protected override async Task OnInitializedAsync()
     {
         _appState.RoutedPage = this;
-        GetComponentAssembly();
-    }
-
-    public void GetComponentAssembly()
-    {
-        var componentType = typeof(Finances);
-        Assembly assembly = componentType.Assembly;
-        Console.WriteLine($"Die Komponente {componentType.Name} befindet sich in der Assembly: {assembly.FullName}");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-
-            SelectedTimeUnit = "Month";
-
             timeUnits = new List<string>()
             {
                 "CW",
@@ -143,20 +88,20 @@
 
             _eventMediator.Subscribe<VisualStateChangedEvent>(async (eventArgs) =>
             {
-                await InvokeAsync(StateHasChanged); // Aufruf im Dispatcher-Kontext
+                await InvokeAsync(StateHasChanged);
             });
 
             _eventMediator.Subscribe<ButtonClickEvent>(async (eventArgs) =>
             {
                 await OnLoadDataButtonClick(eventArgs);
-                await InvokeAsync(StateHasChanged);
             });
 
-            await _plotDrawer.DrawOrderVolumeBarPlot(this, new List<string>(), new List<decimal>());
-            await _plotDrawer.DrawOrderVolumePiePlot(this, new List<string>(), new List<decimal>(), "order-volume-customer-pie", "Customer");
-            await _plotDrawer.DrawOrderVolumePiePlot(this, new List<string>(), new List<decimal>(), "order-volume-product-pie", "Product");
-            await _plotDrawer.DrawOrderVolumePiePlot(this, new List<string>(), new List<decimal>(), "order-volume-sales-person-pie", "Sales Person");
-            await _plotDrawer.DrawOrderVolumePiePlot(this, new List<string>(), new List<decimal>(), "order-volume-territory-pie", "Territory");
+            _eventMediator.Subscribe<PlotClickedEvent>(async (eventArgs) =>
+            {
+                await OnPlotClick(eventArgs);
+            });
+
+            await _plotDrawer.DrawFinancesPlots(this);
         }
 
         _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(this));
@@ -164,63 +109,48 @@
 
     public async Task OnLoadDataButtonClick(ButtonClickEvent args)
     {
-        _appState.FromDateFilter = _appState.FromDateFilter.Value.ToStartOfDay();
-        _appState.UntilDateFilter = _appState.UntilDateFilter.Value.ToEndOfDay();
-
-        var barplotDatasource = await _datastoreService.CreatePlotDataSource(GetTimeUnitColumn(), _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, kpi: KPI.OrderVolume);
-        await _plotDrawer.DrawOrderVolumeBarPlot(this, barplotDatasource.Item1, barplotDatasource.Item2);
-
-        var customerPieplotDatasource = await _datastoreService.CreatePlotDataSource("Customer", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true, KPI.OrderVolume);
-        await _plotDrawer.DrawOrderVolumePiePlot(this, customerPieplotDatasource.Item1, customerPieplotDatasource.Item2, "order-volume-customer-pie", "Customer");
-
-        var productPieplotDatasource = await _datastoreService.CreatePlotDataSource("Product", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true, KPI.OrderVolume);
-        await _plotDrawer.DrawOrderVolumePiePlot(this, productPieplotDatasource.Item1, productPieplotDatasource.Item2, "order-volume-product-pie", "Product");
-
-        var salesPersonPieplotDatasource = await _datastoreService.CreatePlotDataSource("SalesPerson", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true, KPI.OrderVolume);
-        await _plotDrawer.DrawOrderVolumePiePlot(this, salesPersonPieplotDatasource.Item1, salesPersonPieplotDatasource.Item2, "order-volume-sales-person-pie", "Sales Person");
-
-        var territoryPieplotDatasource = await _datastoreService.CreatePlotDataSource("Territory", _appState.FromDateFilter.Value, _appState.UntilDateFilter.Value, 10, true, KPI.OrderVolume);
-        await _plotDrawer.DrawOrderVolumePiePlot(this, territoryPieplotDatasource.Item1, territoryPieplotDatasource.Item2, "order-volume-territory-pie", "Territory");
-
-        await _plotDrawer.DrawHeatmapForOrderVolumeMatrix(this);
+        _appState.RevenueBarPlotWhereFilter = Tuple.Create("", "");
+        await _plotDrawer.DrawFinancesPlots(this);
+        _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(this));
     }
 
-    private bool IsOrderVolumeRow(DataRow row)
+    [JSInvokable("OnPlotClick")]
+    public static void OnPlotClick(string elementId, string label, decimal value)
     {
-        var status = row["Status"].ToString();
-        return status == "1" || status == "2" || status == "3";
+        Console.WriteLine($"Element: {elementId} Label: {label}, Value: {value}");
+        App.EventMediator.Publish<PlotClickedEvent>(new PlotClickedEvent(elementId, label, value));
     }
 
-    private string GetTimeUnitColumn()
+    public async Task OnPlotClick(PlotClickedEvent args)
     {
-        string timeUnitColumn = "";
-        switch (SelectedTimeUnit)
+        var whereFilterColumn = "";
+
+        switch (args.ElementId)
         {
-            case "CW":
-                timeUnitColumn = "TimeUnitCalenderWeek";
+            case "revenue-bar-plot":
+                whereFilterColumn = _appState.RevenueBarPlotSelectedTimeUnit;
+                break;
+            case "revenue-customer-pie":
+                whereFilterColumn = "Customer";
+                break;
+            case "revenue-product-pie":
+                whereFilterColumn = "Product";
+                break;
+            case "revenue-sales-person-pie":
+                whereFilterColumn = "SalesPerson";
+                break;
+            case "revenue-territory-pie":
+                whereFilterColumn = "Territory";
                 break;
 
-            case "Month":
-                timeUnitColumn = "TimeUnitMonth";
-                break;
-
-            case "Quarter":
-                timeUnitColumn = "TimeUnitQuarter";
-                break;
-
-            case "Year":
-                timeUnitColumn = "TimeUnitYear";
+            default:
+                Console.WriteLine($"ERROR: PlotClickedEvent not implemented for {args.ElementId}.");
                 break;
         }
 
-        return timeUnitColumn;
+        _appState.RevenueBarPlotWhereFilter = Tuple.Create(whereFilterColumn, args.Label);
+        await _plotDrawer.DrawFinancesPlots(this);
+        _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(this));
     }
 
-    // Diese Methode wird von JavaScript aufgerufen
-    [JSInvokable("OnPlotClick")]
-    public static void OnPlotClick(string label, decimal value)
-    {
-        Console.WriteLine($"Doppelklick auf: Label: {label}, Value: {value}");
-        // Hier kannst du auch andere Logik einbauen, z.B. einen Event feuern oder UI aktualisieren
-    }
 }

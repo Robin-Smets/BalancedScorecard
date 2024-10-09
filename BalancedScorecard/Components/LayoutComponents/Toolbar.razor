@@ -16,9 +16,9 @@
                 <RadzenButton Icon="dashboard" Text="Load Data" ButtonStyle="ButtonStyle.Base" Click="@OnLoadDataButtonClick" />
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="20">
                     <RadzenLabel Text="From: " Component="RadzenFromDatePicker" />
-                    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_appState.FromDateFilter) Change="@(args => _appState.FromDateFilter = args)" Name="RadzenFromDatePicker" />
+                    <RadzenDatePicker TValue="DateTime" DateFormat="dd.MM.yyyy" Value=@(_appState.FromDateFilter) Change="@(args => _appState.FromDateFilter = args ?? DateTime.Now)" Name="RadzenFromDatePicker" />
                     <RadzenLabel Text="Until: " Component="RadzenUntilDatePicker" />
-                    <RadzenDatePicker TValue="DateTime?" DateFormat="dd.MM.yyyy" Value=@(_appState.UntilDateFilter) Change="@(args => _appState.UntilDateFilter = args)" Name="RadzenUntilDatePicker" />
+                    <RadzenDatePicker TValue="DateTime" DateFormat="dd.MM.yyyy" Value=@(_appState.UntilDateFilter) Change="@(args => _appState.UntilDateFilter = args ?? DateTime.Now)" Name="RadzenUntilDatePicker" />
                 </RadzenStack>
             </RadzenRow>
         }

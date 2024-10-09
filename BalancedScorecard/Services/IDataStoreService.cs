@@ -27,12 +27,14 @@ namespace BalancedScorecard.Services
         /// </summary>
         /// <returns>A task that represents the asynchronous operation of updating the datastore.</returns>
         Task<(List<string>, List<decimal>)> CreatePlotDataSource(
-            string groupByColumn,
-            DateTime fromDateFilter,
-            DateTime untilDateFilter,
-            int top = 0,
-            bool cutID = false,
-            KPI kpi = KPI.Undefined
-        );
+                    string groupByColumn,
+                    DateTime fromDateFilter,
+                    DateTime untilDateFilter,
+                    int top = 0,
+                    bool cutID = false,
+                    Tuple<string, string> whereFilter = null
+                );
+
+        Task<(List<string>, List<string>, decimal[,])> CreateHeatMapDataSource(DateTime fromDateFilter, DateTime untilDateFilter);
     }
 }

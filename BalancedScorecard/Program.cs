@@ -18,8 +18,8 @@ builder.Services.AddSingleton<IDataStoreService, DataStoreService>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<IDataStoreService>());
 
 // Add services
-builder.Services.AddScoped<IPlotDrawer, PlotDrawer>();
 builder.Services.AddScoped<IEventMediator, EventMediator>();
+builder.Services.AddScoped<IPlotDrawer, PlotDrawer>();
 builder.Services.AddScoped<IMLService, MLService>();
 builder.Services.AddScoped<ITerminalService, TerminalService>();
 builder.Services.AddScoped<ITransformer, Transformer>();
