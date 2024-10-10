@@ -13,6 +13,9 @@ using System.Collections.Generic;
 using BalancedScorecard.Enums;
 using System.Reflection;
 using Tensorflow;
+using System.Linq;
+using Radzen;
+using System.Diagnostics.Metrics;
 
 namespace BalancedScorecard.Services
 {
@@ -38,226 +41,112 @@ namespace BalancedScorecard.Services
 
         public async Task<(List<string>, List<string>, decimal[,])> CreateHeatMapDataSource(DateTime fromDateFilter, DateTime untilDateFilter)
         {
-            var plotXValues = new List<string>();
-            var plotYValues = new List<string>();
-            var plotZValues = new List<decimal>();
+            var topFeatures = new List<string>();
+            var valueMatrix = new Dictionary<string, Dictionary<string, decimal>>();
+            decimal[,] z;
 
-            // Ersetze List mit Dictionary für schnellere Lookups
-            var topTenIds = new Dictionary<string, int>();
-            int idCounter = 0;
-
-            // Verwende PLINQ zur parallelen Filterung
             var filteredRows = DataTables["Revenue"].AsEnumerable()
                 .AsParallel()
                 .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()) >= fromDateFilter)
                 .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()) <= untilDateFilter);
 
-            // Verwende Dictionaries für die Top-10-Listen zur schnellen Suche
+
             var topTenCustomers = filteredRows.GroupBy(row => row["Customer"])
                                               .OrderByDescending(group => group.Sum(x => Convert.ToDecimal(x["Revenue"])))
-                                              .Take(10)
-                                              .ToDictionary(g => g.Key.ToString(), g => idCounter++);
+                                              .Take(10);
 
             var topTenProducts = filteredRows.GroupBy(row => row["Product"])
                                              .OrderByDescending(group => group.Sum(x => Convert.ToDecimal(x["Revenue"])))
-                                             .Take(10)
-                                             .ToDictionary(g => g.Key.ToString(), g => idCounter++);
+                                             .Take(10);
 
             var topTenSalesPersonList = filteredRows.GroupBy(row => row["SalesPerson"])
                                                     .OrderByDescending(group => group.Sum(x => Convert.ToDecimal(x["Revenue"])))
-                                                    .Take(10)
-                                                    .ToDictionary(g => g.Key.ToString(), g => idCounter++);
+                                                    .Take(10);
 
             var topTenTerritories = filteredRows.GroupBy(row => row["Territory"])
                                                 .OrderByDescending(group => group.Sum(x => Convert.ToDecimal(x["Revenue"])))
-                                                .Take(10)
-                                                .ToDictionary(g => g.Key.ToString(), g => idCounter++);
+                                                .Take(10);
 
-            // Erstelle z-Matrix
-            var zLength = idCounter;
-            var z = new decimal[zLength, zLength];
+            Parallel.Invoke(
+                () => topFeatures.AddRange(topTenCustomers.ToList().Select(customers => $"Customer_{customers.Key.ToString()}")),
+                () => topFeatures.AddRange(topTenProducts.ToList().Select(products => $"Product_{products.Key.ToString()}")),
+                () => topFeatures.AddRange(topTenSalesPersonList.ToList().Select(salesPerson => $"SalesPerson_{salesPerson.Key.ToString()}")),
+                () => topFeatures.AddRange(topTenTerritories.ToList().Select(territories => $"Territory_{territories.Key.ToString()}"))
+            );
 
-            // Parallelisiere die Aggregation der Revenue-Werte
+            foreach (var rowId in topFeatures)
+            {
+                var row = new Dictionary<string, decimal>();
+
+                foreach (var columnName in topFeatures)
+                {
+                    row[columnName] = 0;
+                }
+
+                valueMatrix[rowId] = row;
+            }
+
             Parallel.ForEach(filteredRows, row =>
             {
-                string customer = row["Customer"].ToString();
-                string product = row["Product"].ToString();
-                string salesPerson = row["SalesPerson"].ToString();
-                string territory = row["Territory"].ToString();
-                decimal revenue = Convert.ToDecimal(row["Revenue"]);
+                var revenue = Convert.ToDecimal(row["Revenue"]);
 
-                // Nur wenn der Kunde, das Produkt, der Verkäufer oder das Territorium in den Top-10 ist
-                if (topTenCustomers.ContainsKey(customer))
+                var customer = $"Customer_{row["Customer"].ToString()}";
+
+                var product = $"Product_{row["Product"].ToString()}";
+                var salesPerson = $"SalesPerson_{row["SalesPerson"].ToString()}";
+                var territory = $"Territory_{row["Territory"].ToString()}";
+                var features = new List<string>()
                 {
-                    int customerIndex = topTenCustomers[customer];
-                    if (topTenProducts.ContainsKey(product))
+                    customer,
+                    product, 
+                    salesPerson, 
+                    territory
+                };
+
+                var featureCombinations = new List<Tuple<string, string>>();
+                foreach (var item1 in features)
+                {
+                    foreach (var item2 in features)
                     {
-                        int productIndex = topTenProducts[product];
-                        z[customerIndex, productIndex] += revenue;
-                    }
-                    if (topTenSalesPersonList.ContainsKey(salesPerson))
-                    {
-                        int salesPersonIndex = topTenSalesPersonList[salesPerson];
-                        z[customerIndex, salesPersonIndex] += revenue;
-                    }
-                    if (topTenTerritories.ContainsKey(territory))
-                    {
-                        int territoryIndex = topTenTerritories[territory];
-                        z[customerIndex, territoryIndex] += revenue;
+                        if (item1 != item2)
+                        {
+                            featureCombinations.Add(Tuple.Create(item1, item2));
+                        }
+
                     }
                 }
 
-                if (topTenProducts.ContainsKey(product))
+                foreach (var featureCombination in featureCombinations)
                 {
-                    int productIndex = topTenProducts[product];
-                    if (topTenSalesPersonList.ContainsKey(salesPerson))
-                    {
-                        int salesPersonIndex = topTenSalesPersonList[salesPerson];
-                        z[productIndex, salesPersonIndex] += revenue;
-                    }
-                    if (topTenTerritories.ContainsKey(territory))
-                    {
-                        int territoryIndex = topTenTerritories[territory];
-                        z[productIndex, territoryIndex] += revenue;
-                    }
-                }
+                    var feature1 = featureCombination.Item1;
+                    var feature2 = featureCombination.Item2;
 
-                if (topTenSalesPersonList.ContainsKey(salesPerson) && topTenTerritories.ContainsKey(territory))
-                {
-                    int salesPersonIndex = topTenSalesPersonList[salesPerson];
-                    int territoryIndex = topTenTerritories[territory];
-                    z[salesPersonIndex, territoryIndex] += revenue;
+                    if (topFeatures.Contains(feature1) && topFeatures.Contains(feature2))
+                    {
+                        var value = valueMatrix[feature1][feature2];
+                        value += revenue;
+                        valueMatrix[feature1][feature2] = value;
+                        valueMatrix[feature2][feature1] = value;
+                    }
                 }
             });
 
-            // Labels für X- und Y-Achsen hinzufügen
-            foreach (var topTenId in topTenCustomers.Concat(topTenProducts).Concat(topTenSalesPersonList).Concat(topTenTerritories))
+            z = new decimal[topFeatures.Count(),  topFeatures.Count()];
+
+            for (int xIndex = 0; xIndex < topFeatures.Count(); xIndex++)
             {
-                var label = $"{topTenId.Key}";
-                plotXValues.Add(label);
-                plotYValues.Add(label);
+                var xId = topFeatures[xIndex];
+
+                for (int yIndex = 0; yIndex < topFeatures.Count(); yIndex++)
+                {
+                    var yId = topFeatures[yIndex];
+
+                    z[xIndex, yIndex] = valueMatrix[xId][yId];
+                }
             }
 
-            // Konvertiere z-Matrix in eine Liste für Plotly
-            //for (int i = 0; i < zLength; i++)
-            //{
-            //    for (int j = 0; j < zLength; j++)
-            //    {
-            //        plotZValues.Add(z[i, j]);
-            //    }
-            //}
-
-            return (plotXValues, plotYValues, z);
+            return (topFeatures, topFeatures, z);
         }
-
-
-        //public async Task<(List<string>, List<string>, List<decimal>)> CreateHeatMapDataSource(DateTime fromDateFilter, DateTime untilDateFilter)
-        //{
-        //    var plotXValues = new List<string>();
-        //    var plotYValues = new List<string>();
-        //    var plotZValues = new List<decimal>();
-
-        //    var topTenTasks = new List<Task>();
-
-        //    var topTenCustomers = new List<string>();
-        //    var topTenProducts = new List<string>();
-        //    var topTenSalesPersonList = new List<string>();
-        //    var topTenTerritories = new List<string>();
-
-        //    var topTenIds = new List<Tuple<string, string>>();
-
-        //    var filteredRows = DataTables["Revenue"].AsEnumerable()
-        //        .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()) >= fromDateFilter)
-        //        .Where(x => CreateDateTimeFromString(x["OrderDate"].ToString()) <= untilDateFilter);
-
-        //    topTenTasks.Add(
-        //        Task.Run(async () =>
-        //        {
-        //            foreach (var topTenCustomer in filteredRows.GroupBy(row => row["Customer"])
-        //                                                       .OrderByDescending(group => group.Sum(x => Convert.ToDecimal(x["Revenue"])))
-        //                                                       .Take(10))
-        //            {
-        //                topTenCustomers.Add(topTenCustomer.Key.ToString());
-        //            }
-        //        })
-        //    );
-
-        //    topTenTasks.Add(
-        //        Task.Run(async () =>
-        //        {
-        //            foreach (var topTenProduct in filteredRows.GroupBy(row => row["Product"])
-        //                                   .OrderByDescending(group => group.Sum(x => Convert.ToDecimal(x["Revenue"])))
-        //                                   .Take(10))
-        //            {
-        //                topTenProducts.Add(topTenProduct.Key.ToString());
-        //            }
-        //        })
-        //    );
-
-        //    topTenTasks.Add(
-        //        Task.Run(async () =>
-        //        {
-        //            foreach (var topTenSalesPerson in filteredRows.GroupBy(row => row["SalesPerson"])
-        //                                   .OrderByDescending(group => group.Sum(x => Convert.ToDecimal(x["Revenue"])))
-        //                                   .Take(10))
-        //            {
-        //                topTenSalesPersonList.Add(topTenSalesPerson.Key.ToString());
-        //            }
-        //        })
-        //    );
-
-        //    topTenTasks.Add(
-        //        Task.Run(async () =>
-        //        {
-        //            foreach (var topTenTerritory in filteredRows.GroupBy(row => row["Territory"])
-        //               .OrderByDescending(group => group.Sum(x => Convert.ToDecimal(x["Revenue"])))
-        //               .Take(10))
-        //            {
-        //                topTenTerritories.Add(topTenTerritory.Key.ToString());
-        //            }
-        //        })
-        //    );
-
-        //    await Task.WhenAll(topTenTasks);
-
-        //    foreach (var item in topTenCustomers)
-        //    {
-        //        topTenIds.Add(Tuple.Create("Customer", item));
-        //    }
-
-        //    foreach (var item in topTenProducts)
-        //    {
-        //        topTenIds.Add(Tuple.Create("Product", item));
-        //    }
-
-        //    foreach (var item in topTenSalesPersonList)
-        //    {
-        //        topTenIds.Add(Tuple.Create("SalesPerson", item));
-        //    }
-
-        //    foreach (var item in topTenTerritories)
-        //    {
-        //        topTenIds.Add(Tuple.Create("Territory", item));
-        //    }
-
-        //    var zLength = topTenIds.Count();
-
-        //    var z = new decimal[zLength, zLength];
-
-        //    foreach (var row in filteredRows)
-        //    {
-        //        // Hier fehlt Logik
-        //    }
-
-        //    foreach (var topTenId in topTenIds)
-        //    {
-        //        var label = $"{topTenId.Item1}_{topTenId.Item2.Split("#")[1]}";
-        //        plotXValues.Add(label);
-        //        plotYValues.Add(label);
-        //    }
-
-        //    return (plotXValues, plotYValues, plotZValues);
-        //}
 
         public async Task<(List<string>, List<decimal>)> CreatePlotDataSource(
             string groupByColumn,
