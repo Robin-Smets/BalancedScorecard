@@ -11,6 +11,7 @@ namespace BalancedScorecard.Services
 
         private readonly IServiceProvider _services;
         private IMLService _mLService => _services.GetRequiredService<IMLService>();
+        private IDataStoreService _datastoreService => _services.GetRequiredService<IDataStoreService>();
         
         public TerminalService(IServiceProvider services) 
         { 
@@ -20,33 +21,13 @@ namespace BalancedScorecard.Services
         public async Task ExecuteCommand(string command)
         {
             Console.Log($"Command: {command}");
-            //if (command.StartsWith("ml train optimized model "))
-            //{
-            //    var commandSuffix = command.Replace("ml train optimized model ", "");
 
-            //    try
-            //    {
-            //        if (commandSuffix != "" && uint.Parse(commandSuffix) is uint seconds)
-            //        {
-            //            await _mLService.TrainModelWithAutoOptimizationAsync(seconds);
-            //        }
-            //        else
-            //        {
-            //            Console.Log($"Not a valid command");
-            //            return;
-            //        }
-            //    }
-            //    catch (Exception)
-            //    {
-            //        Console.Log($"Not a valid command");
-            //        return;
-            //    }
-
-            //}
-            //else
-            //{
                 switch (command)
                 {
+                    case "update datastore":
+                        await _datastoreService.UpdateDataStore();
+                        break;
+
                     case "ml load data":
                         await _mLService.LoadData();
                         break;

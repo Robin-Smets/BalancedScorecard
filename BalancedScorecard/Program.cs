@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//builder.WebHost.UseUrls("http://0.0.0.0:80");
+// builder.WebHost.UseUrls("http://0.0.0.0:80");
 
 // Add components.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();

@@ -1,23 +1,30 @@
-# Base image for runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 80
 
-# Build image
+# Install unixODBC and ODBC Driver 18 for SQL Server
+RUN apt-get update && apt-get install -y \
+    unixodbc \
+    unixodbc-dev \
+    curl \
+    gnupg \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["BalancedScorecard.csproj", "./"]
-RUN dotnet restore "./BalancedScorecard.csproj"
-COPY . .
-WORKDIR "/src/."
-RUN dotnet build "BalancedScorecard.csproj" -c Release -o /app/build
+COPY . . 
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app
 
-# Publish the app
-FROM build AS publish
-RUN dotnet publish "BalancedScorecard.csproj" -c Release -o /app/publish
-
-# Final stage
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app . 
+
+# Optional: Überprüfen der Verzeichnisse
+RUN ls -la ./Sql/Tables/
+
 ENTRYPOINT ["dotnet", "BalancedScorecard.dll"]

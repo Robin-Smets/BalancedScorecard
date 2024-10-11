@@ -28,69 +28,77 @@ namespace BalancedScorecard.Services
 
         public async Task DrawFinancesPlots(IComponent sender)
         {
-            var fromDateFilter = _appState.FromDateFilter.ToStartOfDay();
-            var untilDateFilter = _appState.UntilDateFilter.ToEndOfDay();
-            var timeUnit = _appState.RevenueBarPlotSelectedTimeUnit;
-            var whereFilter = _appState.RevenueBarPlotWhereFilter;
+            try
+            {
+                var fromDateFilter = _appState.FromDateFilter.ToStartOfDay();
+                var untilDateFilter = _appState.UntilDateFilter.ToEndOfDay();
+                var timeUnit = _appState.RevenueBarPlotSelectedTimeUnit;
+                var whereFilter = _appState.RevenueBarPlotWhereFilter;
 
-            var plotTasks = new List<Task>();
+                var plotTasks = new List<Task>();
 
-            plotTasks.Add(
-                Task.Run(async () =>
-                {
-                    var dataSource = await _dataStoreService.CreatePlotDataSource(timeUnit, fromDateFilter, untilDateFilter, whereFilter: whereFilter);
-                    var title = $"Revenue by {timeUnit.ToLower()}";
-                    if (whereFilter.Item1 != "" && whereFilter.Item2 != "")
+                plotTasks.Add(
+                    Task.Run(async () =>
                     {
-                        title += $" ({whereFilter.Item1} = {whereFilter.Item2})";
-                    }
-                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-bar-plot", "bar", title);
-                })
-            );
+                        var dataSource = await _dataStoreService.CreatePlotDataSource(timeUnit, fromDateFilter, untilDateFilter, whereFilter: whereFilter);
+                        var title = $"Revenue by {timeUnit.ToLower()}";
+                        if (whereFilter.Item1 != "" && whereFilter.Item2 != "")
+                        {
+                            title += $" ({whereFilter.Item1} = {whereFilter.Item2})";
+                        }
+                        await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-bar-plot", "bar", title);
+                    })
+                );
 
-            plotTasks.Add(
-                Task.Run(async () =>
-                {
-                    var dataSource = await _dataStoreService.CreatePlotDataSource("Customer", fromDateFilter, untilDateFilter, 10, true);
-                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-customer-pie", "pie", "Top ten total revenue by customer");
-                })
-            );
+                plotTasks.Add(
+                    Task.Run(async () =>
+                    {
+                        var dataSource = await _dataStoreService.CreatePlotDataSource("Customer", fromDateFilter, untilDateFilter, 10, true);
+                        await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-customer-pie", "pie", "Top ten total revenue by customer");
+                    })
+                );
 
-            plotTasks.Add(
-                Task.Run(async () =>
-                {
-                    var dataSource = await _dataStoreService.CreatePlotDataSource("Product", fromDateFilter, untilDateFilter, 10, true);
-                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-product-pie", "pie", "Top ten total revenue by product");
-                })
-            );
+                plotTasks.Add(
+                    Task.Run(async () =>
+                    {
+                        var dataSource = await _dataStoreService.CreatePlotDataSource("Product", fromDateFilter, untilDateFilter, 10, true);
+                        await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-product-pie", "pie", "Top ten total revenue by product");
+                    })
+                );
 
-            plotTasks.Add(
-                Task.Run(async () =>
-                {
-                    var dataSource = await _dataStoreService.CreatePlotDataSource("SalesPerson", fromDateFilter, untilDateFilter, 10, true);
-                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-sales-person-pie", "pie", "Top ten total revenue by sales person");
-                })
-            );
+                plotTasks.Add(
+                    Task.Run(async () =>
+                    {
+                        var dataSource = await _dataStoreService.CreatePlotDataSource("SalesPerson", fromDateFilter, untilDateFilter, 10, true);
+                        await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-sales-person-pie", "pie", "Top ten total revenue by sales person");
+                    })
+                );
 
-            plotTasks.Add(
-                Task.Run(async () =>
-                {
-                    var dataSource = await _dataStoreService.CreatePlotDataSource("Territory", fromDateFilter, untilDateFilter, 10, true);
-                    await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-territory-pie", "pie", "Top ten total revenue by territory");
-                })
-            );
+                plotTasks.Add(
+                    Task.Run(async () =>
+                    {
+                        var dataSource = await _dataStoreService.CreatePlotDataSource("Territory", fromDateFilter, untilDateFilter, 10, true);
+                        await DrawPlot(sender, dataSource.Item1, dataSource.Item2, "revenue-territory-pie", "pie", "Top ten total revenue by territory");
+                    })
+                );
 
-            plotTasks.Add(
-                Task.Run(async () =>
-                {
-                    var dataSource = await _dataStoreService.CreateHeatMapDataSource(fromDateFilter, untilDateFilter);
-                    await DrawPlot(sender, dataSource.Item1, new List<decimal>(), "revenue-heatmap", "heatmap", "Revenue by feature combination", dataSource.Item3);
-                })
-            );
+                plotTasks.Add(
+                    Task.Run(async () =>
+                    {
+                        var dataSource = await _dataStoreService.CreateHeatMapDataSource(fromDateFilter, untilDateFilter);
+                        await DrawPlot(sender, dataSource.Item1, new List<decimal>(), "revenue-heatmap", "heatmap", "Revenue by feature combination", dataSource.Item3);
+                    })
+                );
 
-            await Task.WhenAll(plotTasks);
+                await Task.WhenAll(plotTasks);
 
-            Console.WriteLine("Finances plots were created succesfully.");
+                Console.WriteLine("Finances plots were created succesfully.");
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
+
         }
 
         public async Task DrawPlot(IComponent sender, List<string> xValues, List<decimal> yValues, string htmlElement, string type, string title, decimal[,] z = null)

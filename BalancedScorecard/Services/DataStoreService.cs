@@ -244,37 +244,43 @@ namespace BalancedScorecard.Services
 
         public async Task UpdateDataStore()
         {
-
-            var sqlScripts = GetSqlFilesContent(_sqlScriptsPath);
-
-            using (OdbcConnection connection = new OdbcConnection(_connectionString))
+            try
             {
-                await connection.OpenAsync();
+                var sqlScripts = GetSqlFilesContent(_sqlScriptsPath);
 
-                // Schleife durch jedes SQL-Skript
-                foreach (var sqlScript in sqlScripts)
+                using (OdbcConnection connection = new OdbcConnection(_connectionString))
                 {
+                    await connection.OpenAsync();
 
-                    using (OdbcCommand command = new OdbcCommand(sqlScript.Value, connection))
+                    // Schleife durch jedes SQL-Skript
+                    foreach (var sqlScript in sqlScripts)
                     {
-                        using (System.Data.Common.DbDataReader reader = await command.ExecuteReaderAsync())
+
+                        using (OdbcCommand command = new OdbcCommand(sqlScript.Value, connection))
                         {
-                            // Erstelle eine neue DataTable
-                            DataTable dataTable = new DataTable();
+                            using (System.Data.Common.DbDataReader reader = await command.ExecuteReaderAsync())
+                            {
+                                // Erstelle eine neue DataTable
+                                DataTable dataTable = new DataTable();
 
-                            // Lade die Daten vom OdbcDataReader in die DataTable
-                            dataTable.Load(reader);
+                                // Lade die Daten vom OdbcDataReader in die DataTable
+                                dataTable.Load(reader);
 
-                            // Optional: Gib der DataTable einen Namen basierend auf dem SQL-Skript oder einem Index
-                            dataTable.TableName = sqlScript.Key; // Verwende den Dateinamen als Tabellenname, falls `sqlScript.Key` der Dateiname ist.
+                                // Optional: Gib der DataTable einen Namen basierend auf dem SQL-Skript oder einem Index
+                                dataTable.TableName = sqlScript.Key; // Verwende den Dateinamen als Tabellenname, falls `sqlScript.Key` der Dateiname ist.
 
-                            // Füge die DataTable dem DataSet (_dataStore) hinzu
-                            _dataStore.Tables.Add(dataTable);
+                                // Füge die DataTable dem DataSet (_dataStore) hinzu
+                                _dataStore.Tables.Add(dataTable);
+                            }
                         }
                     }
-                }
 
-                connection.Close();
+                    connection.Close();
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
             }
         }
 

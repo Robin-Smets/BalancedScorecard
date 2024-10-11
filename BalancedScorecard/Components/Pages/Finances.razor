@@ -102,9 +102,8 @@
             });
 
             await _plotDrawer.DrawFinancesPlots(this);
+            _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(this));
         }
-
-        _eventMediator.Publish<VisualStateChangedEvent>(new VisualStateChangedEvent(this));
     }
 
     public async Task OnLoadDataButtonClick(ButtonClickEvent args)
